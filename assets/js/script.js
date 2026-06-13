@@ -184,58 +184,24 @@ function initContactForm() {
     submitBtn.textContent = 'Baking your message... 🥣🔥';
     submitBtn.style.opacity = '0.75';
 
-    // Get CSRF Token
-    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    // Send AJAX fetch request to Django API
-    fetch('/api/contact/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken
-      },
-      body: JSON.stringify({
-        full_name: document.getElementById('form-name').value,
-        email: document.getElementById('form-email').value,
-        subject: document.getElementById('form-subject').value,
-        service_type: document.getElementById('form-service').value,
-        message: document.getElementById('form-message').value
-      })
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Server returned error status');
-      }
-      return response.json();
-    })
-    .then(data => {
-      // Reset button
+    // Simulate baking process for the static version
+    setTimeout(() => {
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       submitBtn.style.opacity = '';
 
-      if (data.success) {
-        // Show success alert
-        successBox.classList.add('success');
-        form.reset();
+      // Show success alert
+      successBox.classList.add('success');
+      form.reset();
 
-        // Smooth scroll success alert into view
-        successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Smooth scroll success alert into view
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-        // Clear success notification after 7 seconds
-        setTimeout(() => {
-          successBox.classList.remove('success');
-        }, 7000);
-      } else {
-        alert(data.error || 'Failed to submit. Please review your ingredients.');
-      }
-    })
-    .catch(err => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalBtnText;
-      submitBtn.style.opacity = '';
-      alert('A connection error occurred. Please try again.');
-    });
+      // Clear success notification after 7 seconds
+      setTimeout(() => {
+        successBox.classList.remove('success');
+      }, 7000);
+    }, 1500);
   });
 }
 

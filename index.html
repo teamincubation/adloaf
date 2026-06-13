@@ -1,4 +1,4 @@
-{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +16,7 @@
   <title>Adloaf | Freshly Baked Creative Ideas for Brands</title>
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -388,7 +388,7 @@
         <!-- Item 1: Websites -->
         <div class="portfolio-item reveal" data-category="websites">
           <div class="portfolio-img-wrap">
-            <img src="{% static 'core/assets/portfolio_websites.png' %}" alt="Sleek digital agency landing page display mockup" loading="lazy">
+            <img src="assets/portfolio_websites.png" alt="Sleek digital agency landing page display mockup" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
                 <span class="portfolio-tag">Websites</span>
@@ -406,7 +406,7 @@
         <!-- Item 2: Posters -->
         <div class="portfolio-item reveal reveal-delay-1" data-category="posters">
           <div class="portfolio-img-wrap">
-            <img src="{% static 'core/assets/portfolio_posters.png' %}" alt="Minimalist poster mockup displaying agency message" loading="lazy">
+            <img src="assets/portfolio_posters.png" alt="Minimalist poster mockup displaying agency message" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
                 <span class="portfolio-tag">Posters</span>
@@ -424,7 +424,7 @@
         <!-- Item 3: Branding -->
         <div class="portfolio-item reveal" data-category="branding">
           <div class="portfolio-img-wrap">
-            <img src="{% static 'core/assets/portfolio_branding.png' %}" alt="Unified corporate brand design assets layout" loading="lazy">
+            <img src="assets/portfolio_branding.png" alt="Unified corporate brand design assets layout" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
                 <span class="portfolio-tag">Branding</span>
@@ -442,7 +442,7 @@
         <!-- Item 4: Social Media -->
         <div class="portfolio-item reveal reveal-delay-1" data-category="social">
           <div class="portfolio-img-wrap">
-            <img src="{% static 'core/assets/portfolio_social.png' %}" alt="Sleek Instagram post grid mockup" loading="lazy">
+            <img src="assets/portfolio_social.png" alt="Sleek Instagram post grid mockup" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
                 <span class="portfolio-tag">Social Media</span>
@@ -460,7 +460,7 @@
         <!-- Item 5: UI Concepts -->
         <div class="portfolio-item reveal" data-category="uiconcepts">
           <div class="portfolio-img-wrap">
-            <img src="{% static 'core/assets/portfolio_uiconcepts.png' %}" alt="Sleek mobile app dash UI mockup" loading="lazy">
+            <img src="assets/portfolio_uiconcepts.png" alt="Sleek mobile app dash UI mockup" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
                 <span class="portfolio-tag">UI Concepts</span>
@@ -705,7 +705,7 @@
       <!-- Right: Premium Custom Validation Form -->
       <div class="contact-card reveal reveal-delay-1">
         <form class="contact-form" id="contact-form" novalidate>
-          {% csrf_token %}
+
           <div class="form-row-2">
             <!-- Name Input -->
             <div class="form-group">
