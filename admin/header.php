@@ -110,14 +110,16 @@ require_once '../config.php';
             </a>
             <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
             <ul class="admin-nav">
-                <li><a href="index.php" class="<?php echo $current_page == 'index.php' ? 'active' : ''; ?>">Dashboard</a></li>
-                <li><a href="works.php" class="<?php echo $current_page == 'works.php' ? 'active' : ''; ?>">Clients & Works</a></li>
-                <li><a href="services.php" class="<?php echo $current_page == 'services.php' ? 'active' : ''; ?>">Services</a></li>
-                <li><a href="portfolio.php" class="<?php echo $current_page == 'portfolio.php' ? 'active' : ''; ?>">Portfolio</a></li>
-                <li><a href="process.php" class="<?php echo $current_page == 'process.php' ? 'active' : ''; ?>">Process</a></li>
-                <li><a href="bento.php" class="<?php echo $current_page == 'bento.php' ? 'active' : ''; ?>">Bento Grid</a></li>
-                <li><a href="messages.php" class="<?php echo $current_page == 'messages.php' ? 'active' : ''; ?>">Messages</a></li>
-                <li><a href="settings.php" class="<?php echo $current_page == 'settings.php' ? 'active' : ''; ?>">Site Settings</a></li>
+                <li><a href="index.php"         class="<?php echo $current_page == 'index.php'         ? 'active' : ''; ?>">📊 Dashboard</a></li>
+                <li><a href="bake_requests.php"  class="<?php echo $current_page == 'bake_requests.php' ? 'active' : ''; ?>">🍞 Bake Requests</a></li>
+                <li><a href="works.php"          class="<?php echo $current_page == 'works.php'         ? 'active' : ''; ?>">👥 Clients & Works</a></li>
+                <li><a href="services.php"       class="<?php echo $current_page == 'services.php'      ? 'active' : ''; ?>">🛠 Services</a></li>
+                <li><a href="portfolio.php"      class="<?php echo $current_page == 'portfolio.php'     ? 'active' : ''; ?>">🎨 Portfolio</a></li>
+                <li><a href="process.php"        class="<?php echo $current_page == 'process.php'       ? 'active' : ''; ?>">⚙ Process</a></li>
+                <li><a href="bento.php"          class="<?php echo $current_page == 'bento.php'         ? 'active' : ''; ?>">🧱 Bento Grid</a></li>
+                <li><a href="clients_brand.php"  class="<?php echo $current_page == 'clients_brand.php' ? 'active' : ''; ?>">🏷 Client Logos</a></li>
+                <li><a href="messages.php"       class="<?php echo $current_page == 'messages.php'      ? 'active' : ''; ?>">✉ Messages</a></li>
+                <li><a href="settings.php"       class="<?php echo $current_page == 'settings.php'      ? 'active' : ''; ?>">⚙ Site Settings</a></li>
             </ul>
             <div style="margin-top: auto;">
                 <a href="../index.php" target="_blank" class="btn btn-secondary" style="display: block; text-align: center; margin-bottom: 10px;">View Site</a>

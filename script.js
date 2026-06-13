@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPortfolioFilter();
   initContactForm();
   initSmoothScrollActiveState();
+  initStatsCounter();
 });
 
 /**
@@ -263,4 +264,36 @@ function initSmoothScrollActiveState() {
   sections.forEach(section => {
     navObserver.observe(section);
   });
+}
+
+/**
+ * Stats Counter Animation
+ */
+function initStatsCounter() {
+  const counters = document.querySelectorAll('.stat-num[data-count]');
+  if (!counters.length) return;
+
+  const animate = (el, target) => {
+    const duration = 2000;
+    const start = performance.now();
+    const update = (time) => {
+      const elapsed = Math.min((time - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - elapsed, 3); // ease-out cubic
+      const val = Math.round(eased * target);
+      el.textContent = val.toLocaleString() + (target >= 100 ? '+' : '');
+      if (elapsed < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+  };
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.animated) {
+        entry.target.dataset.animated = 'true';
+        animate(entry.target, parseInt(entry.target.dataset.count));
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counters.forEach(el => observer.observe(el));
 }

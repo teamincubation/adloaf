@@ -1,31 +1,34 @@
 <?php
-require_once 'config.php';
+require_once 'lib/helpers.php';
+try { track_visitor('/'); } catch(Exception $e) {}
 
 // Fetch site settings
 $settingsQuery = $pdo->query("SELECT setting_key, setting_value FROM site_settings");
-$settingsData = $settingsQuery->fetchAll(PDO::FETCH_KEY_PAIR);
+$settingsData  = $settingsQuery->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// Helper function for settings
 function get_setting($key, $default = '') {
     global $settingsData;
     return isset($settingsData[$key]) ? $settingsData[$key] : $default;
 }
 
-// Fetch Services
-$servicesQuery = $pdo->query("SELECT * FROM services ORDER BY sort_order ASC");
-$services = $servicesQuery->fetchAll();
+$services    = $pdo->query("SELECT * FROM services ORDER BY sort_order ASC")->fetchAll();
+$portfolio   = $pdo->query("SELECT * FROM portfolio_items ORDER BY sort_order ASC")->fetchAll();
+$processSteps= $pdo->query("SELECT * FROM process_steps ORDER BY sort_order ASC")->fetchAll();
+$bentoCards  = $pdo->query("SELECT * FROM bento_cards ORDER BY sort_order ASC")->fetchAll();
 
-// Fetch Portfolio
-$portfolioQuery = $pdo->query("SELECT * FROM portfolio_items ORDER BY sort_order ASC");
-$portfolio = $portfolioQuery->fetchAll();
-
-// Fetch Process Steps
-$processQuery = $pdo->query("SELECT * FROM process_steps ORDER BY sort_order ASC");
-$processSteps = $processQuery->fetchAll();
-
-// Fetch Bento Cards
-$bentoQuery = $pdo->query("SELECT * FROM bento_cards ORDER BY sort_order ASC");
-$bentoCards = $bentoQuery->fetchAll();
+// Stats & Clients (safe fallback if tables don't exist yet)
+try {
+    $statsRaw = $pdo->query("SELECT stat_key, stat_value FROM site_stats")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $popularClients = $pdo->query("SELECT * FROM popular_clients ORDER BY sort_order ASC")->fetchAll();
+} catch(PDOException $e) {
+    $statsRaw = [];
+    $popularClients = [];
+}
+$siteStats = [
+    'clients'   => $statsRaw['total_clients']       ?? 0,
+    'projects'  => $statsRaw['completed_projects']  ?? 0,
+    'years'     => $statsRaw['active_years']        ?? 1,
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,14 +70,14 @@ $bentoCards = $bentoQuery->fetchAll();
           <li><a href="#home" class="nav-link active">Home</a></li>
           <li><a href="#about" class="nav-link">About</a></li>
           <li><a href="#services" class="nav-link">Services</a></li>
-          <li><a href="#portfolio" class="nav-link">Works</a></li>
+          <li><a href="works.php" class="nav-link">Works</a></li>
           <li><a href="#process" class="nav-link">Process</a></li>
-          <li><a href="#contact" class="nav-link">Contact</a></li>
+          <li><a href="pricing.php" class="nav-link">Pricing</a></li>
         </ul>
       </nav>
 
       <div class="header-actions">
-        <a href="#contact" class="btn btn-primary btn-header" id="header-cta">Bake a Project</a>
+        <a href="bake.php" class="btn btn-primary btn-header" id="header-cta">Bake a Project</a>
         <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-controls="nav-menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -94,8 +97,8 @@ $bentoCards = $bentoQuery->fetchAll();
           <?php echo get_setting('hero_desc', 'A creative showcase of websites, graphic designs, brand visuals, and digital ideas crafted to help brands look better, communicate smarter, and grow faster.'); ?>
         </p>
         <div class="hero-ctas">
-          <a href="#portfolio" class="btn btn-primary btn-loaf" id="hero-cta-works">View Works</a>
-          <a href="#contact" class="btn btn-secondary btn-loaf" id="hero-cta-contact">Contact Me</a>
+          <a href="works.php" class="btn btn-primary btn-loaf" id="hero-cta-works">View Works</a>
+          <a href="bake.php" class="btn btn-secondary btn-loaf" id="hero-cta-contact">Contact Me</a>
         </div>
         <div class="hero-features">
           <div class="hero-feat-item">
@@ -395,116 +398,76 @@ $bentoCards = $bentoQuery->fetchAll();
     </div>
   </section>
 
-  <!-- CONTACT SECTION -->
-  <section class="contact" id="contact">
-    <div class="container contact-grid">
-      <div class="contact-info-wrap reveal">
-        <span class="section-badge">Bake with Us</span>
-        <h2 class="section-title">Send a Recipe Request</h2>
-        <p class="contact-header-subtitle">
-          Have an idea or brand project waiting to be shaped? Drop us a line below or reach out via our social links. We serve hot creative inputs directly to your inbox.
-        </p>
-
-        <div class="contact-channels">
-          <div class="contact-item">
-            <div class="contact-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-              </svg>
-            </div>
-            <div>
-              <div class="contact-item-title">E-mail Address</div>
-              <a href="mailto:<?php echo htmlspecialchars(get_setting('contact_email')); ?>" class="contact-item-link" id="contact-email"><?php echo htmlspecialchars(get_setting('contact_email')); ?></a>
-            </div>
-          </div>
-
-          <div class="contact-item">
-            <div class="contact-icon-box">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-            </div>
-            <div>
-              <div class="contact-item-title">WhatsApp Chat</div>
-              <a href="<?php echo htmlspecialchars(get_setting('contact_whatsapp')); ?>" target="_blank" rel="noopener" class="contact-item-link" id="contact-whatsapp">Chat on WhatsApp</a>
-            </div>
-          </div>
+  <!-- STATS COUNTER SECTION -->
+  <?php if ($siteStats['clients'] > 0 || $siteStats['projects'] > 0 || $siteStats['years'] > 0): ?>
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <?php if ($siteStats['clients'] > 0): ?>
+        <div class="stat-item reveal">
+          <div class="stat-num" data-count="<?php echo $siteStats['clients']; ?>">0</div>
+          <div class="stat-label">Happy Clients</div>
         </div>
-
-        <div class="social-links">
-          <a href="<?php echo htmlspecialchars(get_setting('social_dribbble')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Dribbble Account Link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.49-11.05 1-11.6 8.56"/>
-            </svg>
-          </a>
-          <a href="<?php echo htmlspecialchars(get_setting('social_behance')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Behance Account Link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 19a5 5 0 0 0 5-5v-1a5 5 0 0 0-5-5M2 5h7a4 4 0 0 1 0 8H2V5Zm0 8h8a4 4 0 0 1 0 8H2v-8ZM14 6h7"/>
-            </svg>
-          </a>
-          <a href="<?php echo htmlspecialchars(get_setting('social_linkedin')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="LinkedIn Account Link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>
-            </svg>
-          </a>
-          <a href="<?php echo htmlspecialchars(get_setting('social_instagram')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram Account Link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/>
-            </svg>
-          </a>
+        <?php endif; ?>
+        <?php if ($siteStats['projects'] > 0): ?>
+        <div class="stat-item reveal reveal-delay-1">
+          <div class="stat-num" data-count="<?php echo $siteStats['projects']; ?>">0</div>
+          <div class="stat-label">Projects Completed</div>
         </div>
-      </div>
-
-      <div class="contact-card reveal reveal-delay-1">
-        <form class="contact-form" id="contact-form" novalidate>
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="form-name" class="form-label">Full Name</label>
-              <input type="text" id="form-name" class="form-input" placeholder="Your name" required>
-            </div>
-            <div class="form-group">
-              <label for="form-email" class="form-label">Email Address</label>
-              <input type="email" id="form-email" class="form-input" placeholder="you@example.com" required>
-            </div>
-          </div>
-
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="form-subject" class="form-label">Subject</label>
-              <input type="text" id="form-subject" class="form-input" placeholder="Project name / query" required>
-            </div>
-            <div class="form-group">
-              <label for="form-service" class="form-label">Recipe Type</label>
-              <select id="form-service" class="form-input" style="height: 53px;" required>
-                <option value="" disabled selected>Select a Service</option>
-                <option value="websites">Website Design</option>
-                <option value="landing">Landing Pages</option>
-                <option value="graphics">Graphic Design</option>
-                <option value="branding">Brand Identity</option>
-                <option value="social">Social Creatives</option>
-                <option value="campaigns">Digital Campaigns</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="form-message" class="form-label">Project Ingredients</label>
-            <textarea id="form-message" class="form-textarea" placeholder="Outline your project goals, timelines, and strategy details..." required></textarea>
-          </div>
-
-          <div class="form-message" id="form-success-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
-            </svg>
-            <span>Your request has been placed in the oven! We will reply soon.</span>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-loaf" id="form-submit-btn" style="width: 100%;">Bake the Message</button>
-        </form>
+        <?php endif; ?>
+        <?php if ($siteStats['years'] > 0): ?>
+        <div class="stat-item reveal reveal-delay-2">
+          <div class="stat-num" data-count="<?php echo $siteStats['years']; ?>">0</div>
+          <div class="stat-label">Years of Excellence</div>
+        </div>
+        <?php endif; ?>
       </div>
     </div>
   </section>
+  <?php endif; ?>
+
+  <!-- POPULAR CLIENTS MARQUEE -->
+  <?php if (!empty($popularClients)): ?>
+  <section class="clients-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-badge">Our Clients</span>
+        <h2 class="section-title">Trusted By Great Brands</h2>
+      </div>
+    </div>
+    <div class="marquee-outer">
+      <div class="marquee-track">
+        <?php foreach (array_merge($popularClients, $popularClients) as $client): ?>
+        <div class="marquee-item">
+          <?php if (!empty($client['website_url'])): ?>
+          <a href="<?php echo htmlspecialchars($client['website_url']); ?>" target="_blank" rel="noopener">
+          <?php endif; ?>
+            <img src="<?php echo htmlspecialchars($client['logo_path']); ?>" alt="<?php echo htmlspecialchars($client['client_name']); ?>" class="client-logo">
+          <?php if (!empty($client['website_url'])): ?>
+          </a>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <!-- CTA SECTION -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card reveal">
+        <span class="section-badge">Start a Project</span>
+        <h2 class="cta-title">Ready to Bake Something Fresh?</h2>
+        <p class="cta-desc">Fill in your project details and let us bake a brilliant creative outcome for your brand.</p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+          <a href="bake.php" class="btn btn-primary btn-loaf">Bake a Project</a>
+          <a href="pricing.php" class="btn btn-secondary btn-loaf">View Pricing</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <!-- FOOTER -->
   <footer class="footer">
@@ -557,6 +520,11 @@ $bentoCards = $bentoQuery->fetchAll();
       </div>
     </div>
   </footer>
+
+  <!-- WhatsApp Float Widget -->
+  <a href="https://wa.me/<?php echo ADMIN_WA; ?>?text=Hi%20Adloaf!%20I%20want%20to%20discuss%20a%20project." target="_blank" class="wa-float" id="wa-float" aria-label="Chat on WhatsApp">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+  </a>
 
   <!-- Core JavaScript -->
   <script src="script.js?v=<?php echo time(); ?>"></script>
