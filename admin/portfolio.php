@@ -2,9 +2,24 @@
 require_once 'header.php';
 
 $success = '';
+$errorMsg = '';
+$uploadDir = '../assets/uploads/';
+
+// Ensure upload directory exists
+if (!file_exists($uploadDir)) {
+    mkdir($uploadDir, 0755, true);
+}
 
 // Handle Delete
 if (isset($_GET['delete'])) {
+    // Optionally delete the file as well
+    $stmt = $pdo->prepare("SELECT image_path FROM portfolio_items WHERE id = ?");
+    $stmt->execute([$_GET['delete']]);
+    $item = $stmt->fetch();
+    if ($item && file_exists('../' . $item['image_path']) && strpos($item['image_path'], 'uploads/') !== false) {
+        unlink('../' . $item['image_path']);
+    }
+
     $stmt = $pdo->prepare("DELETE FROM portfolio_items WHERE id = ?");
     $stmt->execute([$_GET['delete']]);
     $success = "Portfolio item deleted successfully.";
@@ -15,19 +30,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category = $_POST['category'];
     $title = $_POST['title'];
     $description = $_POST['description'];
-    $image_path = $_POST['image_path'];
     $sort_order = $_POST['sort_order'] ?: 0;
+    
+    // File upload logic
+    $image_path = null;
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['image']['tmp_name'];
+        $fileName = $_FILES['image']['name'];
+        $fileNameCmps = explode(".", $fileName);
+        $fileExtension = strtolower(end($fileNameCmps));
+        
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+        if (in_array($fileExtension, $allowedExts)) {
+            $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+            $destPath = $uploadDir . $newFileName;
+            
+            if (move_uploaded_file($fileTmpPath, $destPath)) {
+                $image_path = 'assets/uploads/' . $newFileName;
+            } else {
+                $errorMsg = "Error moving uploaded file. Check directory permissions.";
+            }
+        } else {
+            $errorMsg = "Invalid file extension.";
+        }
+    }
 
-    if (!empty($_POST['id'])) {
-        // Edit
-        $stmt = $pdo->prepare("UPDATE portfolio_items SET category=?, title=?, description=?, image_path=?, sort_order=? WHERE id=?");
-        $stmt->execute([$category, $title, $description, $image_path, $sort_order, $_POST['id']]);
-        $success = "Portfolio item updated successfully.";
-    } else {
-        // Add
-        $stmt = $pdo->prepare("INSERT INTO portfolio_items (category, title, description, image_path, sort_order) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$category, $title, $description, $image_path, $sort_order]);
-        $success = "Portfolio item added successfully.";
+    if (!$errorMsg) {
+        if (!empty($_POST['id'])) {
+            // Edit
+            if ($image_path) {
+                $stmt = $pdo->prepare("UPDATE portfolio_items SET category=?, title=?, description=?, image_path=?, sort_order=? WHERE id=?");
+                $stmt->execute([$category, $title, $description, $image_path, $sort_order, $_POST['id']]);
+            } else {
+                $stmt = $pdo->prepare("UPDATE portfolio_items SET category=?, title=?, description=?, sort_order=? WHERE id=?");
+                $stmt->execute([$category, $title, $description, $sort_order, $_POST['id']]);
+            }
+            $success = "Portfolio item updated successfully.";
+        } else {
+            // Add
+            if (!$image_path) {
+                // Try to use fallback text input if provided (for backwards compatibility/easy default testing)
+                $image_path = $_POST['existing_image_path'] ?? 'assets/portfolio_websites.png';
+            }
+            
+            $stmt = $pdo->prepare("INSERT INTO portfolio_items (category, title, description, image_path, sort_order) VALUES (?, ?, ?, ?, ?)");
+            $stmt->execute([$category, $title, $description, $image_path, $sort_order]);
+            $success = "Portfolio item added successfully.";
+        }
     }
 }
 
@@ -51,10 +100,15 @@ if (isset($_GET['edit'])) {
 <?php if ($success): ?>
     <div class="success-toast"><?php echo htmlspecialchars($success); ?></div>
 <?php endif; ?>
+<?php if ($errorMsg): ?>
+    <div class="error-msg" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 2rem;">
+        <?php echo htmlspecialchars($errorMsg); ?>
+    </div>
+<?php endif; ?>
 
 <div class="admin-card">
     <h3 style="color: var(--text-primary); margin-bottom: 1rem;"><?php echo $editItem ? 'Edit Portfolio Item' : 'Add New Portfolio Item'; ?></h3>
-    <form method="POST" action="portfolio.php">
+    <form method="POST" action="portfolio.php" enctype="multipart/form-data">
         <?php if ($editItem): ?>
             <input type="hidden" name="id" value="<?php echo $editItem['id']; ?>">
         <?php endif; ?>
@@ -81,14 +135,20 @@ if (isset($_GET['edit'])) {
             <textarea name="description" class="form-textarea" rows="3" required><?php echo $editItem ? htmlspecialchars($editItem['description']) : ''; ?></textarea>
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Image Path (e.g., assets/portfolio_websites.png)</label>
-            <input type="text" name="image_path" class="form-input" required value="<?php echo $editItem ? htmlspecialchars($editItem['image_path']) : ''; ?>">
-        </div>
-        
-        <div class="form-group">
-            <label class="form-label">Sort Order</label>
-            <input type="number" name="sort_order" class="form-input" value="<?php echo $editItem ? $editItem['sort_order'] : '0'; ?>">
+        <div class="form-row-2">
+            <div class="form-group">
+                <label class="form-label">Upload Image</label>
+                <input type="file" name="image" class="form-input" accept="image/*" style="padding-top: 13px;">
+                <?php if ($editItem): ?>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 5px;">Leave empty to keep current image: <?php echo htmlspecialchars($editItem['image_path']); ?></small>
+                <?php else: ?>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 5px;">Supported formats: JPG, PNG, WEBP, SVG</small>
+                <?php endif; ?>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sort Order</label>
+                <input type="number" name="sort_order" class="form-input" value="<?php echo $editItem ? $editItem['sort_order'] : '0'; ?>">
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary"><?php echo $editItem ? 'Update Portfolio Item' : 'Add Portfolio Item'; ?></button>
