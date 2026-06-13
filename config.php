@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
-$db = 'adloafDB';
-$user = 'adloaf_DB';
+$db = 'u806388046_adloafDB';
+$user = 'u806388046_adloaf_DB';
 $pass = 'Adnan@adloaf2027#';
 
 try {
