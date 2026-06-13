@@ -1,7 +1,20 @@
+# Virtual Environment
 venv/
-*.pyc
-__pycache__/
+
+# Django Local Files
 db.sqlite3
 staticfiles/
-.system_generated/
+media/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Helper Scripts & Artifacts
 install.log
+get-pip.py
+download_and_install.py
+unzip_wheels.py
+install_django.py
+update_template.py
+wheels/
