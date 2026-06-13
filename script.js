@@ -184,8 +184,9 @@ function initContactForm() {
     submitBtn.textContent = 'Baking your message... 🥣🔥';
     submitBtn.style.opacity = '0.75';
 
-    // Simulate baking process for the static version
+    // Simulate oven bake time (1.8s)
     setTimeout(() => {
+      // Reset button
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       submitBtn.style.opacity = '';
@@ -201,7 +202,7 @@ function initContactForm() {
       setTimeout(() => {
         successBox.classList.remove('success');
       }, 7000);
-    }, 1500);
+    }, 1800);
   });
 }
 
