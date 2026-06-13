@@ -72,6 +72,8 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 100px;
   font-size: 16px;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -80,6 +82,7 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
+  width: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -387,10 +390,15 @@ a {
     display: flex;
   }
 
+  /* Desktop: Hide mobile-only elements */
+  .mobile-only {
+    display: none !important;
+  }
+
   .nav-menu {
     position: fixed;
     top: 0;
-    right: -100%;
+    right: 0;
     width: 280px;
     height: 100vh;
     background-color: var(--bg-primary);
@@ -403,10 +411,17 @@ a {
     transition: var(--transition-smooth);
     z-index: 999;
     border-left: 1px solid var(--border-light);
+    transform: translateX(100%);
   }
 
   .nav-menu.open {
-    right: 0;
+    transform: translateX(0);
+  }
+
+  .mobile-only {
+    display: block !important;
+    width: 100%;
+    text-align: center;
   }
 
   .header-actions {
@@ -2058,25 +2073,30 @@ body.admin-body select.form-input option {
 .auth-form-pane {
   flex: 0.9;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 3rem;
   z-index: 2;
+  overflow-y: auto;
 }
 
 .auth-form-inner {
   width: 100%;
   max-width: 420px;
+  margin: auto 0;
 }
 
 /* Center card style for forgot/reset page */
 .auth-center-layout {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   padding: 2rem;
   background: var(--bg-primary);
+  overflow-y: auto;
 }
 
 .auth-center-card {
@@ -2088,6 +2108,7 @@ body.admin-body select.form-input option {
   max-width: 440px;
   box-shadow: var(--shadow-lg);
   transition: var(--transition-smooth);
+  margin: auto 0;
 }
 
 .auth-center-card:hover {
@@ -2167,7 +2188,7 @@ body.admin-body select.form-input option {
 
 .works-grid-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
 }
 
@@ -2646,6 +2667,8 @@ body.admin-body select.form-input option {
 @media (max-width: 868px) {
   .auth-split-layout {
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
   }
   .auth-sidebar-pane {
     padding: 3rem 2rem;
@@ -2655,6 +2678,319 @@ body.admin-body select.form-input option {
   .auth-form-pane {
     padding: 3rem 2rem;
     flex: none;
+    overflow-y: visible;
+    max-height: none;
   }
+}
+
+/* --- Bake Page & Oven Request Styles --- */
+.bake-page {
+  padding: 8.5rem 0 6.5rem 0;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+.bake-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.bake-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+.bake-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+.bake-title span {
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.bake-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+}
+
+/* User Strip */
+.user-strip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+.user-strip-info {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.user-strip-info strong {
+  color: var(--text-primary);
+}
+
+/* Bake Form Card */
+.bake-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 20px;
+  padding: 2.5rem;
+}
+.bake-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-medium);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.bake-section-title .num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+  color: #fff;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.textarea-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Pricing Panel */
+.pricing-panel {
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.06), rgba(217, 119, 6, 0.04));
+  border: 1px solid rgba(234, 88, 12, 0.2);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+.pricing-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.price-box {
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  border: 1px solid var(--border-medium);
+}
+.price-box.ours {
+  border-color: var(--accent-orange);
+}
+.price-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.price-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0.25rem 0;
+}
+.price-box.ours .price-val {
+  color: var(--accent-orange);
+}
+.price-save {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+/* Currency Row */
+.currency-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.currency-row label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.currency-row select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+/* Success View */
+.bake-success {
+  text-align: center;
+  padding: 3rem 2rem;
+}
+.bake-success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+.bake-success h2 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+.bake-success p {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+  .pricing-compare {
+    grid-template-columns: 1fr;
+  }
+  .bake-card {
+    padding: 1.5rem;
+  }
+}
+
+/* --- Pricing Page Styles --- */
+.pricing-hero {
+  text-align: center;
+  padding: 0 1.5rem 3rem;
+}
+.pricing-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.pricing-title span {
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.currency-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+.currency-toolbar label {
+  color: var(--text-secondary);
+  font-size: .9rem;
+}
+.currency-toolbar select {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  color: var(--text-primary);
+  padding: .5rem 1rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: .9rem;
+  cursor: pointer;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.pricing-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 20px;
+  padding: 2rem;
+  transition: transform .3s, border-color .3s, box-shadow .3s;
+}
+.pricing-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--accent-orange);
+  box-shadow: 0 20px 60px rgba(234, 88, 12, .15);
+}
+.pricing-icon {
+  width: 52px;
+  height: 52px;
+  background: rgba(234, 88, 12, 0.1);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  color: var(--accent-orange);
+}
+.pricing-service {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: .5rem;
+}
+.pricing-desc {
+  color: var(--text-secondary);
+  font-size: .9rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.price-from {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-secondary);
+  margin-bottom: .2rem;
+}
+.price-amount {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent-orange);
+}
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .5rem;
+}
+.market-label {
+  font-size: .8rem;
+  color: var(--text-secondary);
+}
+.market-val {
+  font-size: .9rem;
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.save-pill {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.cta-strip {
+  text-align: center;
+  margin-top: 4rem;
+}
+.note-text {
+  color: var(--text-secondary);
+  font-size: .85rem;
+  margin-top: 2rem;
+  text-align: center;
 }
 

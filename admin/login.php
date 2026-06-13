@@ -53,10 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             background-color: var(--bg-primary);
+            overflow-y: auto;
+            padding: 2rem 0;
         }
         .login-card {
             background-color: var(--bg-secondary);
@@ -66,6 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
             max-width: 400px;
             border: 1px solid var(--border-color);
+            margin: auto 0;
         }
         .login-logo {
             display: flex;

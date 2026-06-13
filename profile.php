@@ -102,6 +102,14 @@ $bakeRequests = $reqStmt->fetchAll();
         <li><a href="works.php" class="nav-link">Works</a></li>
         <li><a href="index.php#process" class="nav-link">Process</a></li>
         <li><a href="pricing.php" class="nav-link">Pricing</a></li>
+        <!-- Mobile-only links -->
+        <?php if ($user): ?>
+          <li class="mobile-only"><a href="profile.php" class="nav-link active">Profile Dashboard</a></li>
+          <li class="mobile-only"><a href="auth/logout.php" class="nav-link" style="color: #ef4444;">Logout</a></li>
+        <?php else: ?>
+          <li class="mobile-only"><a href="auth/login.php?next=profile.php" class="nav-link">Sign In</a></li>
+        <?php endif; ?>
+        <li class="mobile-only" style="margin-top: 1rem;"><a href="bake.php" class="btn btn-primary" style="width: 100%; text-align: center; padding: 0.75rem;">Bake a Project</a></li>
       </ul>
     </nav>
 

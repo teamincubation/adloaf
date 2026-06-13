@@ -92,7 +92,7 @@ $next = $_GET['next'] ?? '../bake.php';
       </div>
     </div>
 
-    <div class="auth-form-pane" style="align-items: flex-start; padding-top: 5rem; padding-bottom: 5rem; overflow-y: auto; max-height: 100vh;">
+    <div class="auth-form-pane">
       <div class="auth-form-inner">
         <h1 class="auth-title" style="margin-bottom: 0.5rem;">Create an Account</h1>
         <p class="auth-subtitle" style="margin-bottom: 2rem;">Join the bakery to submit your creative project.</p>
