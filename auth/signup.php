@@ -66,88 +66,96 @@ $next = $_GET['next'] ?? '../bake.php';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up | Adloaf</title>
   <link rel="stylesheet" href="../style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-primary); }
-    .auth-card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:20px; padding:2.5rem; width:100%; max-width:480px; }
-    .auth-logo { text-align:center; margin-bottom:2rem; }
-    .auth-logo a { font-size:2rem; font-weight:800; color:var(--text-primary); text-decoration:none; }
-    .auth-logo span { color:var(--primary-color); }
-    .auth-title { font-size:1.5rem; font-weight:700; color:var(--text-primary); margin-bottom:0.25rem; }
-    .auth-subtitle { color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.9rem; }
-    .phone-wrap { display:flex; gap:0.5rem; }
-    .phone-wrap select { flex:0 0 140px; height:53px; }
-    .phone-wrap input { flex:1; }
-    .auth-footer { text-align:center; margin-top:1rem; color:var(--text-secondary); font-size:0.9rem; }
-    .auth-footer a { color:var(--primary-color); text-decoration:none; }
-    .form-error { background:rgba(239,68,68,0.1); color:#ef4444; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; }
-    .divider { display:flex; align-items:center; gap:1rem; margin:1.5rem 0; color:var(--text-secondary); font-size:0.85rem; }
-    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border-color); }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="auth-card">
-    <div class="auth-logo"><a href="../index.php">Adloaf<span>.</span></a></div>
-    <h1 class="auth-title">Create your account</h1>
-    <p class="auth-subtitle">Join the bakery to submit your creative project.</p>
-
-    <?php if ($error): ?>
-      <div class="form-error"><?php echo $error; ?></div>
-    <?php endif; ?>
-
-    <form method="POST" action="">
-      <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-      <input type="hidden" name="next"       value="<?php echo htmlspecialchars($next); ?>">
-
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input type="text" name="full_name" class="form-input" placeholder="Your full name" required value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <input type="email" name="email" class="form-input" placeholder="you@example.com" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">WhatsApp Number <span style="color:#EA580C;">*</span> <small style="color:var(--text-secondary);font-weight:400;">(Required for smooth communication)</small></label>
-        <div class="phone-wrap">
-          <select name="country_code" class="form-input" id="country-code-select">
-            <option value="+91" data-flag="🇮🇳" selected>🇮🇳 +91 (India)</option>
-            <option value="+1"  data-flag="🇺🇸">🇺🇸 +1 (USA)</option>
-            <option value="+44" data-flag="🇬🇧">🇬🇧 +44 (UK)</option>
-            <option value="+971" data-flag="🇦🇪">🇦🇪 +971 (UAE)</option>
-            <option value="+966" data-flag="🇸🇦">🇸🇦 +966 (Saudi)</option>
-            <option value="+60"  data-flag="🇲🇾">🇲🇾 +60 (Malaysia)</option>
-            <option value="+65"  data-flag="🇸🇬">🇸🇬 +65 (Singapore)</option>
-            <option value="+61"  data-flag="🇦🇺">🇦🇺 +61 (Australia)</option>
-            <option value="+49"  data-flag="🇩🇪">🇩🇪 +49 (Germany)</option>
-            <option value="+33"  data-flag="🇫🇷">🇫🇷 +33 (France)</option>
-            <option value="+974" data-flag="🇶🇦">🇶🇦 +974 (Qatar)</option>
-            <option value="+965" data-flag="🇰🇼">🇰🇼 +965 (Kuwait)</option>
-            <option value="+973" data-flag="🇧🇭">🇧🇭 +973 (Bahrain)</option>
-          </select>
-          <input type="tel" name="whatsapp_number" class="form-input" placeholder="9876543210" required value="<?php echo htmlspecialchars($_POST['whatsapp_number'] ?? ''); ?>">
+  <div class="auth-split-layout">
+    <div class="auth-sidebar-pane">
+      <a href="../index.php" class="auth-sidebar-brand" aria-label="Adloaf Home">
+        <div class="logo-icon-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
+            <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
+            <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
+          </svg>
         </div>
-        <small style="color:var(--text-secondary);display:block;margin-top:4px;">Enter number without country code prefix</small>
+        <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+      </a>
+      
+      <div class="auth-sidebar-content">
+        <h2 class="auth-sidebar-title">Freshly <span>Baked</span> Design Delivery.</h2>
+        <p class="auth-sidebar-desc">Join our visual bakery! Create an account to cook custom project requests, estimate rates, and access real-time status updates.</p>
       </div>
-      <input type="hidden" name="whatsapp" id="whatsapp-full">
-
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-input" placeholder="Min. 8 characters" required minlength="8">
+      
+      <div class="auth-sidebar-footer">
+        &copy; 2026 Adloaf Creative. Freshly baked design assets.
       </div>
+    </div>
 
-      <div class="form-group">
-        <label class="form-label">Confirm Password</label>
-        <input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required>
+    <div class="auth-form-pane" style="align-items: flex-start; padding-top: 5rem; padding-bottom: 5rem; overflow-y: auto; max-height: 100vh;">
+      <div class="auth-form-inner">
+        <h1 class="auth-title" style="margin-bottom: 0.5rem;">Create an Account</h1>
+        <p class="auth-subtitle" style="margin-bottom: 2rem;">Join the bakery to submit your creative project.</p>
+
+        <?php if ($error): ?>
+          <div class="form-error"><?php echo $error; ?></div>
+        <?php endif; ?>
+
+        <form method="POST" action="" onsubmit="combinePhone()">
+          <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+          <input type="hidden" name="next"       value="<?php echo htmlspecialchars($next); ?>">
+
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-input" placeholder="Your full name" required value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>" style="height: 52px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-input" placeholder="you@example.com" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" style="height: 52px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">WhatsApp Number <span style="color:#EA580C;">*</span> <small style="color:var(--text-secondary);font-weight:400;">(Required for smooth communication)</small></label>
+            <div class="phone-select-wrap">
+              <select name="country_code" class="phone-code-select" id="country-code-select">
+                <option value="+91" data-flag="🇮🇳" selected>🇮🇳 +91</option>
+                <option value="+1"  data-flag="🇺🇸">🇺🇸 +1</option>
+                <option value="+44" data-flag="🇬🇧">🇬🇧 +44</option>
+                <option value="+971" data-flag="🇦🇪">🇦🇪 +971</option>
+                <option value="+966" data-flag="🇸🇦">🇸🇦 +966</option>
+                <option value="+60"  data-flag="🇲🇾">🇲🇾 +60</option>
+                <option value="+65"  data-flag="🇸🇬">🇸🇬 +65</option>
+                <option value="+61"  data-flag="🇦🇺">🇦🇺 +61</option>
+                <option value="+49"  data-flag="🇩🇪">🇩🇪 +49</option>
+                <option value="+33"  data-flag="🇫🇷">🇫🇷 +33</option>
+                <option value="+974" data-flag="🇶🇦">🇶🇦 +974</option>
+                <option value="+965" data-flag="🇰🇼">🇰🇼 +965</option>
+                <option value="+973" data-flag="🇧🇭">🇧🇭 +973</option>
+              </select>
+              <input type="tel" name="whatsapp_number" class="form-input phone-number-input" placeholder="9876543210" required value="<?php echo htmlspecialchars($_POST['whatsapp_number'] ?? ''); ?>">
+            </div>
+            <small style="color:var(--text-secondary); display:block; margin-top:4px;">Enter number without country code prefix</small>
+          </div>
+          <input type="hidden" name="whatsapp" id="whatsapp-full">
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-input" placeholder="Min. 8 characters" required minlength="8" style="height: 52px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required style="height: 52px;">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem; font-size: 1rem; margin-top: 1rem;">Create Account</button>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+          Already have an account? <a href="login.php?next=<?php echo urlencode($next); ?>" style="font-weight: 700;">Sign in</a>
+        </div>
       </div>
-
-      <button type="submit" class="btn btn-primary" style="width:100%;padding:0.85rem;" onclick="combinePhone()">Create Account</button>
-    </form>
-
-    <div class="auth-footer">
-      Already have an account? <a href="login.php?next=<?php echo urlencode($next); ?>">Sign in</a>
     </div>
   </div>
 

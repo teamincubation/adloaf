@@ -43,55 +43,66 @@ $next = $_GET['next'] ?? '../bake.php';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In | Adloaf</title>
   <link rel="stylesheet" href="../style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-primary); }
-    .auth-card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; }
-    .auth-logo { text-align:center; margin-bottom:2rem; }
-    .auth-logo a { font-size:2rem; font-weight:800; color:var(--text-primary); text-decoration:none; }
-    .auth-logo span { color:var(--primary-color); }
-    .auth-title { font-size:1.5rem; font-weight:700; color:var(--text-primary); margin-bottom:0.25rem; }
-    .auth-subtitle { color:var(--text-secondary); margin-bottom:1.5rem; font-size:0.9rem; }
-    .auth-footer { text-align:center; margin-top:1rem; color:var(--text-secondary); font-size:0.9rem; }
-    .auth-footer a { color:var(--primary-color); text-decoration:none; }
-    .form-error { background:rgba(239,68,68,0.1); color:#ef4444; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; }
-    .forgot-link { text-align:right; margin-top:-0.5rem; margin-bottom:1rem; }
-    .forgot-link a { color:var(--text-secondary); font-size:0.85rem; text-decoration:none; }
-    .forgot-link a:hover { color:var(--primary-color); }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="auth-card">
-    <div class="auth-logo"><a href="../index.php">Adloaf<span>.</span></a></div>
-    <h1 class="auth-title">Welcome back</h1>
-    <p class="auth-subtitle">Sign in to manage your bake requests.</p>
-
-    <?php if ($error): ?>
-      <div class="form-error"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
-
-    <form method="POST" action="">
-      <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-      <input type="hidden" name="next" value="<?php echo htmlspecialchars($next); ?>">
-
-      <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <input type="email" name="email" class="form-input" placeholder="you@example.com" required autofocus>
+  <div class="auth-split-layout">
+    <div class="auth-sidebar-pane">
+      <a href="../index.php" class="auth-sidebar-brand" aria-label="Adloaf Home">
+        <div class="logo-icon-wrap">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
+            <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
+            <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+      </a>
+      
+      <div class="auth-sidebar-content">
+        <h2 class="auth-sidebar-title">Kneading <span>Creativity</span> Into Every Brand.</h2>
+        <p class="auth-sidebar-desc">Welcome back to the bakery! Sign in to review your recipes, track your ongoing loaf projects, and submit new design ingredients.</p>
       </div>
-
-      <div class="form-group">
-        <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-input" placeholder="Your password" required>
+      
+      <div class="auth-sidebar-footer">
+        &copy; 2026 Adloaf Creative. Freshly baked design assets.
       </div>
-      <div class="forgot-link">
-        <a href="forgot_password.php">Forgot password?</a>
+    </div>
+
+    <div class="auth-form-pane">
+      <div class="auth-form-inner">
+        <h1 class="auth-title" style="margin-bottom: 0.5rem;">Welcome Back</h1>
+        <p class="auth-subtitle" style="margin-bottom: 2rem;">Sign in to manage your bake requests.</p>
+
+        <?php if ($error): ?>
+          <div class="form-error"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <form method="POST" action="">
+          <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+          <input type="hidden" name="next" value="<?php echo htmlspecialchars($next); ?>">
+
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-input" placeholder="you@example.com" required autofocus style="height: 52px;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-input" placeholder="Your password" required style="height: 52px;">
+          </div>
+          
+          <div class="forgot-link" style="text-align: right; margin-top: -0.25rem; margin-bottom: 1.5rem;">
+            <a href="forgot_password.php" style="color: var(--text-secondary); font-size: 0.88rem; font-weight: 600;">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem; font-size: 1rem;">Sign In</button>
+        </form>
+
+        <div class="auth-footer" style="margin-top: 2rem;">
+          Don't have an account? <a href="signup.php?next=<?php echo urlencode($next); ?>" style="font-weight: 700;">Sign up</a>
+        </div>
       </div>
-
-      <button type="submit" class="btn btn-primary" style="width:100%;padding:0.85rem;">Sign In</button>
-    </form>
-
-    <div class="auth-footer">
-      Don't have an account? <a href="signup.php?next=<?php echo urlencode($next); ?>">Sign up</a>
     </div>
   </div>
 </body>

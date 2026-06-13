@@ -1,6 +1,7 @@
 <?php
 require_once 'lib/helpers.php';
 try { track_visitor('/'); } catch(Exception $e) {}
+$user = current_user();
 
 // Fetch site settings
 $settingsQuery = $pdo->query("SELECT setting_key, setting_value FROM site_settings");
@@ -77,7 +78,22 @@ $siteStats = [
       </nav>
 
       <div class="header-actions">
-        <a href="bake.php" class="btn btn-primary btn-header" id="header-cta">Bake a Project</a>
+        <?php if ($user): ?>
+          <div class="header-profile-menu">
+            <div class="header-profile-trigger">
+              <img src="<?php echo $user['profile_photo'] ? htmlspecialchars($user['profile_photo']) : 'https://www.gravatar.com/avatar/' . md5(strtolower(trim($user['email']))) . '?d=mp'; ?>" alt="Profile" class="header-profile-avatar">
+              <span class="header-profile-name"><?php echo htmlspecialchars(explode(' ', $user['full_name'])[0]); ?></span>
+            </div>
+            <div class="header-dropdown-card">
+              <a href="profile.php" class="header-dropdown-link">👤 Profile Dashboard</a>
+              <a href="auth/logout.php" class="header-dropdown-link" style="color: #ef4444;">🚪 Logout</a>
+            </div>
+          </div>
+        <?php else: ?>
+          <a href="auth/login.php?next=index.php" class="btn btn-secondary btn-header" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">Sign In</a>
+        <?php endif; ?>
+
+        <a href="bake.php" class="btn btn-primary btn-header" id="header-cta" style="margin-left: 0.5rem;">Bake a Project</a>
         <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-controls="nav-menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>

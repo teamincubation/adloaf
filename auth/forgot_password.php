@@ -38,41 +38,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forgot Password | Adloaf</title>
   <link rel="stylesheet" href="../style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-primary); }
-    .auth-card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; }
-    .auth-logo { text-align:center; margin-bottom:2rem; }
-    .auth-logo a { font-size:2rem; font-weight:800; color:var(--text-primary); text-decoration:none; }
-    .auth-logo span { color:var(--primary-color); }
-    .auth-footer { text-align:center; margin-top:1rem; color:var(--text-secondary); font-size:0.9rem; }
-    .auth-footer a { color:var(--primary-color); text-decoration:none; }
-    .form-success { background:rgba(16,185,129,0.1); color:#10b981; padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="auth-card">
-    <div class="auth-logo"><a href="../index.php">Adloaf<span>.</span></a></div>
-    <h1 style="color:var(--text-primary);font-size:1.5rem;margin-bottom:0.25rem;">Forgot Password?</h1>
-    <p style="color:var(--text-secondary);margin-bottom:1.5rem;font-size:0.9rem;">Enter your email and we'll send a reset link.</p>
-
-    <?php if ($success): ?>
-      <div class="form-success"><?php echo htmlspecialchars($success); ?></div>
-    <?php endif; ?>
-
-    <?php if (!$success): ?>
-    <form method="POST">
-      <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-      <div class="form-group">
-        <label class="form-label">Email Address</label>
-        <input type="email" name="email" class="form-input" placeholder="you@example.com" required autofocus>
+  <div class="auth-center-layout">
+    <div class="auth-center-card">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="../index.php" class="logo" style="justify-content: center; display: inline-flex;">
+          <div class="logo-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
+              <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
+              <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+        </a>
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;padding:0.85rem;">Send Reset Link</button>
-    </form>
-    <?php endif; ?>
 
-    <div class="auth-footer">
-      <a href="login.php">← Back to Login</a>
+      <h1 class="auth-title" style="margin-bottom: 0.5rem; text-align: center; font-size: 1.6rem;">Forgot Password?</h1>
+      <p class="auth-subtitle" style="margin-bottom: 2rem; text-align: center;">Enter your email and we'll send a reset link.</p>
+
+      <?php if ($success): ?>
+        <div class="success-toast" style="margin-bottom: 1.5rem; text-align: center;"><?php echo htmlspecialchars($success); ?></div>
+      <?php endif; ?>
+
+      <?php if (!$success): ?>
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Email Address</label>
+          <input type="email" name="email" class="form-input" placeholder="you@example.com" required autofocus style="height: 52px;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem; font-size: 1rem;">Send Reset Link</button>
+      </form>
+      <?php endif; ?>
+
+      <div class="auth-footer" style="margin-top: 2rem; border-top: 1px solid var(--border-medium); padding-top: 1.25rem;">
+        <a href="login.php" style="font-weight: 700;">← Back to Login</a>
+      </div>
     </div>
   </div>
 </body>

@@ -102,7 +102,7 @@ require_once '../config.php';
         }
     </style>
 </head>
-<body>
+<body class="admin-body">
     <div class="admin-layout">
         <aside class="admin-sidebar">
             <a href="index.php" class="logo" style="justify-content: center;">

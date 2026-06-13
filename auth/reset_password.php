@@ -38,46 +38,55 @@ if ($valid && $_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reset Password | Adloaf</title>
   <link rel="stylesheet" href="../style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg-primary); }
-    .auth-card { background:var(--bg-secondary); border:1px solid var(--border-color); border-radius:20px; padding:2.5rem; width:100%; max-width:420px; }
-    .auth-logo { text-align:center; margin-bottom:2rem; }
-    .auth-logo a { font-size:2rem; font-weight:800; color:var(--text-primary); text-decoration:none; }
-    .auth-logo span { color:var(--primary-color); }
-    .form-error { background:rgba(239,68,68,0.1); color:#ef4444; padding:.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
-    .form-success { background:rgba(16,185,129,0.1); color:#10b981; padding:.75rem 1rem; border-radius:8px; margin-bottom:1rem; }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="auth-card">
-    <div class="auth-logo"><a href="../index.php">Adloaf<span>.</span></a></div>
+  <div class="auth-center-layout">
+    <div class="auth-center-card">
+      <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="../index.php" class="logo" style="justify-content: center; display: inline-flex;">
+          <div class="logo-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
+              <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
+              <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+        </a>
+      </div>
 
-    <?php if (!$valid && !$success): ?>
-      <div class="form-error">This reset link is invalid or has expired. <a href="forgot_password.php" style="color:#EA580C;">Request a new one</a>.</div>
-    <?php endif; ?>
+      <?php if (!$valid && !$success): ?>
+        <div class="form-error" style="text-align: center;">This reset link is invalid or has expired. <br><br><a href="forgot_password.php" style="color:#EA580C; font-weight:700;">Request a new link</a></div>
+      <?php endif; ?>
 
-    <?php if ($success): ?>
-      <div class="form-success"><?php echo htmlspecialchars($success); ?></div>
-      <a href="login.php" class="btn btn-primary" style="display:block;text-align:center;padding:0.85rem;">Go to Login</a>
-    <?php endif; ?>
+      <?php if ($success): ?>
+        <div class="success-toast" style="margin-bottom: 1.5rem; text-align: center;"><?php echo htmlspecialchars($success); ?></div>
+        <a href="login.php" class="btn btn-primary" style="display:block; text-align:center; padding:0.95rem; font-size: 1rem;">Go to Login</a>
+      <?php endif; ?>
 
-    <?php if ($valid): ?>
-      <h1 style="color:var(--text-primary);font-size:1.5rem;margin-bottom:1.5rem;">Set New Password</h1>
-      <?php if ($error): ?><div class="form-error"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-      <form method="POST">
-        <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-        <div class="form-group">
-          <label class="form-label">New Password</label>
-          <input type="password" name="password" class="form-input" placeholder="Min. 8 characters" required minlength="8">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirm Password</label>
-          <input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;padding:0.85rem;">Reset Password</button>
-      </form>
-    <?php endif; ?>
+      <?php if ($valid): ?>
+        <h1 class="auth-title" style="margin-bottom: 0.5rem; text-align: center; font-size: 1.6rem;">Set New Password</h1>
+        <p class="auth-subtitle" style="margin-bottom: 2rem; text-align: center;">Choose a strong password for your account.</p>
+
+        <?php if ($error): ?>
+          <div class="form-error" style="margin-bottom: 1.5rem;"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <form method="POST">
+          <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+          <div class="form-group" style="margin-bottom: 1.25rem;">
+            <label class="form-label">New Password</label>
+            <input type="password" name="password" class="form-input" placeholder="Min. 8 characters" required minlength="8" style="height: 52px;">
+          </div>
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-input" placeholder="Repeat password" required style="height: 52px;">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem; font-size: 1rem;">Reset Password</button>
+        </form>
+      <?php endif; ?>
+    </div>
   </div>
 </body>
 </html>
