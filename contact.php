@@ -7,11 +7,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode($input, true);
 
     if ($data) {
-        $name = filter_var($data['name'] ?? '', FILTER_SANITIZE_STRING);
+        $name = htmlspecialchars(strip_tags($data['name'] ?? ''));
         $email = filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL);
-        $subject = filter_var($data['subject'] ?? '', FILTER_SANITIZE_STRING);
-        $service = filter_var($data['service'] ?? '', FILTER_SANITIZE_STRING);
-        $message = filter_var($data['message'] ?? '', FILTER_SANITIZE_STRING);
+        $subject = htmlspecialchars(strip_tags($data['subject'] ?? ''));
+        $service = htmlspecialchars(strip_tags($data['service'] ?? ''));
+        $message = htmlspecialchars(strip_tags($data['message'] ?? ''));
 
         if ($name && $email && $subject && $service && $message) {
             try {
