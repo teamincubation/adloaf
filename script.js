@@ -165,7 +165,7 @@ function initContactForm() {
     });
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     // Reset styles
@@ -173,7 +173,6 @@ function initContactForm() {
 
     // Check validity
     if (!form.checkValidity()) {
-      // Show browser tooltips/error states
       form.reportValidity();
       return;
     }
@@ -184,25 +183,50 @@ function initContactForm() {
     submitBtn.textContent = 'Baking your message... 🥣🔥';
     submitBtn.style.opacity = '0.75';
 
-    // Simulate oven bake time (1.8s)
-    setTimeout(() => {
+    // Prepare JSON data
+    const payload = {
+      name: document.getElementById('form-name').value,
+      email: document.getElementById('form-email').value,
+      subject: document.getElementById('form-subject').value,
+      service: document.getElementById('form-service').value,
+      message: document.getElementById('form-message').value
+    };
+
+    try {
+      const response = await fetch('contact.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.json();
+
+      if (result.success) {
+        // Show success alert
+        successBox.classList.add('success');
+        form.reset();
+
+        // Smooth scroll success alert into view
+        successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Clear success notification after 7 seconds
+        setTimeout(() => {
+          successBox.classList.remove('success');
+        }, 7000);
+      } else {
+        alert("Failed to send message: " + (result.error || "Unknown error"));
+      }
+    } catch (error) {
+      alert("An error occurred while sending the message.");
+      console.error(error);
+    } finally {
       // Reset button
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       submitBtn.style.opacity = '';
-
-      // Show success alert
-      successBox.classList.add('success');
-      form.reset();
-
-      // Smooth scroll success alert into view
-      successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-      // Clear success notification after 7 seconds
-      setTimeout(() => {
-        successBox.classList.remove('success');
-      }, 7000);
-    }, 1800);
+    }
   });
 }
 

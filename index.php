@@ -1,3 +1,32 @@
+<?php
+require_once 'config.php';
+
+// Fetch site settings
+$settingsQuery = $pdo->query("SELECT setting_key, setting_value FROM site_settings");
+$settingsData = $settingsQuery->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Helper function for settings
+function get_setting($key, $default = '') {
+    global $settingsData;
+    return isset($settingsData[$key]) ? $settingsData[$key] : $default;
+}
+
+// Fetch Services
+$servicesQuery = $pdo->query("SELECT * FROM services ORDER BY sort_order ASC");
+$services = $servicesQuery->fetchAll();
+
+// Fetch Portfolio
+$portfolioQuery = $pdo->query("SELECT * FROM portfolio_items ORDER BY sort_order ASC");
+$portfolio = $portfolioQuery->fetchAll();
+
+// Fetch Process Steps
+$processQuery = $pdo->query("SELECT * FROM process_steps ORDER BY sort_order ASC");
+$processSteps = $processQuery->fetchAll();
+
+// Fetch Bento Cards
+$bentoQuery = $pdo->query("SELECT * FROM bento_cards ORDER BY sort_order ASC");
+$bentoCards = $bentoQuery->fetchAll();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,15 +48,11 @@
 </head>
 <body>
 
-  <!-- ==========================================
-       HEADER & NAVIGATION
-       ========================================== -->
+  <!-- HEADER & NAVIGATION -->
   <header class="header" id="header">
     <div class="container nav-container">
-      <!-- Brand Logo -->
       <a href="#" class="logo" id="nav-logo" aria-label="Adloaf Home">
         <div class="logo-icon-wrap">
-          <!-- Custom SVG Logo: Loaf & Digital Sparks -->
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
             <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
@@ -37,7 +62,6 @@
         <span class="logo-text">Adloaf<span class="logo-dot">.</span></span>
       </a>
 
-      <!-- Navigation Links -->
       <nav aria-label="Main Navigation">
         <ul class="nav-menu" id="nav-menu">
           <li><a href="#home" class="nav-link active">Home</a></li>
@@ -49,37 +73,30 @@
         </ul>
       </nav>
 
-      <!-- CTA Button & Hamburger -->
       <div class="header-actions">
         <a href="#contact" class="btn btn-primary btn-header" id="header-cta">Bake a Project</a>
         <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation Menu" aria-controls="nav-menu" aria-expanded="false">
-          <span></span>
-          <span></span>
-          <span></span>
+          <span></span><span></span><span></span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- ==========================================
-       HERO SECTION
-       ========================================== -->
+  <!-- HERO SECTION -->
   <section class="hero" id="home">
     <div class="container hero-grid">
-      <!-- Left: Copy & Actions -->
       <div class="hero-text-wrap reveal">
         <span class="hero-title-prefix">Welcome to the Creative Bakery</span>
         <h1 class="hero-title">
-          Freshly Baked <span class="glow">Creative Ideas</span> for Brands.
+          <?php echo get_setting('hero_title', 'Freshly Baked <span class="glow">Creative Ideas</span> for Brands.'); ?>
         </h1>
         <p class="hero-desc">
-          A creative showcase of websites, graphic designs, brand visuals, and digital ideas crafted to help brands look better, communicate smarter, and grow faster.
+          <?php echo get_setting('hero_desc', 'A creative showcase of websites, graphic designs, brand visuals, and digital ideas crafted to help brands look better, communicate smarter, and grow faster.'); ?>
         </p>
         <div class="hero-ctas">
           <a href="#portfolio" class="btn btn-primary btn-loaf" id="hero-cta-works">View Works</a>
           <a href="#contact" class="btn btn-secondary btn-loaf" id="hero-cta-contact">Contact Me</a>
         </div>
-        <!-- Micro features -->
         <div class="hero-features">
           <div class="hero-feat-item">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -98,47 +115,33 @@
         </div>
       </div>
 
-      <!-- Right: Custom SVG Oven Visual -->
       <div class="hero-visual reveal reveal-delay-2">
         <div class="hero-glow-back"></div>
         <div class="dough-shape-1"></div>
         <div class="dough-shape-2"></div>
         
-        <!-- Premium Animated Custom SVG Oven Illustration -->
         <svg class="oven-illustration" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Oven Body Outer Shadow & Frame -->
           <rect x="50" y="80" width="300" height="260" rx="36" fill="#2C2018" stroke="#E8DEC6" stroke-width="4"/>
-          <!-- Top Control Panel Background -->
           <path d="M50 116c0-20 16-36 36-36h228c20 0 36 16 36 36v14H50v-14Z" fill="#1E1611"/>
-          <!-- Control Panel Dials -->
           <circle cx="90" cy="98" r="7" fill="#EA580C"/>
           <circle cx="115" cy="98" r="7" fill="#D97706"/>
-          <!-- Digital Display Timer -->
           <rect x="260" y="88" width="60" height="20" rx="6" fill="#2C2018"/>
           <text x="272" y="103" fill="#EA580C" font-family="'Outfit', sans-serif" font-size="12" font-weight="800" letter-spacing="1">08:00</text>
           
-          <!-- Large Glass Door -->
           <rect x="75" y="145" width="250" height="165" rx="20" fill="#1E1611" stroke="#E8DEC6" stroke-width="3"/>
-          <!-- Inner Glow representing heating element -->
           <rect x="90" y="160" width="220" height="135" rx="12" fill="url(#ovenGlow)" opacity="0.85"/>
           
-          <!-- Glowing Creative Bread rising inside -->
           <path d="M140 250c0-25 20-35 60-35s60 10 60 35v15H140v-15Z" fill="url(#breadGradient)" stroke="#EA580C" stroke-width="2"/>
           <path d="M170 230l10-15M200 227l5-18M225 231l-8-16" stroke="#FAF7F2" stroke-width="2" stroke-linecap="round"/>
-          
-          <!-- Steam Lines rising from Bread -->
           <path d="M165 190c-5-8 5-15 0-22M200 185c5-8-5-15 0-22M235 190c-5-8 5-15 0-22" stroke="#EA580C" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
           
-          <!-- Oven Door Handle -->
           <rect x="110" y="130" width="180" height="10" rx="5" fill="#FAF7F2"/>
           <rect x="130" y="125" width="15" height="15" rx="3" fill="#E8DEC6"/>
           <rect x="255" y="125" width="15" height="15" rx="3" fill="#E8DEC6"/>
           
-          <!-- Bottom Oven Feet -->
           <rect x="80" y="340" width="30" height="15" rx="5" fill="#2C2018"/>
           <rect x="290" y="340" width="30" height="15" rx="5" fill="#2C2018"/>
           
-          <!-- SVG Definitions for Gradients -->
           <defs>
             <radialGradient id="ovenGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
               <stop offset="0%" stop-color="#EA580C" stop-opacity="0.45"/>
@@ -156,20 +159,15 @@
     </div>
   </section>
 
-  <!-- ==========================================
-       ABOUT SECTION
-       ========================================== -->
+  <!-- ABOUT SECTION -->
   <section class="about" id="about">
     <div class="container about-grid">
-      <!-- Left Side: Interactive Stacking Cards -->
       <div class="about-image-side reveal">
         <div class="about-card-stack">
-          <!-- Card 1: Brand Concept Definition -->
           <div class="about-stack-card about-card-1">
             <div class="about-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="18" height="18" x="3" y="3" rx="2"/>
-                <path d="M12 8v8M8 12h8"/>
+                <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8M8 12h8"/>
               </svg>
             </div>
             <div>
@@ -177,7 +175,6 @@
               <p class="about-card-text">Combining marketing strategies (Ad) with warm, organic design ideas (Loaf).</p>
             </div>
           </div>
-          <!-- Card 2: Value Proposition -->
           <div class="about-stack-card about-card-2">
             <div class="about-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -189,7 +186,6 @@
               <p class="about-card-text">Every detail is hand-kneaded, verified, and served to visual perfection.</p>
             </div>
           </div>
-          <!-- Card 3: Backing Plate -->
           <div class="about-stack-card about-card-3">
             <div class="about-card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -204,7 +200,6 @@
         </div>
       </div>
 
-      <!-- Right Side: Copywriting -->
       <div class="about-text-side reveal reveal-delay-1">
         <div class="section-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -212,12 +207,9 @@
           </svg>
           Who is Adloaf?
         </div>
-        <h2 class="section-title">Fresh Design Thinking. Ready-to-Serve Platforms.</h2>
-        <p class="about-desc">
-          Adloaf is a creative design brand engineered to act like an artisanal bakery for business visuals. In our bakery, <strong>“Ad”</strong> stands for advertising, branding, strategy, and business growth. <strong>“Loaf”</strong> represents our freshly baked design concepts, warm organic layouts, and premium digital solutions that we knead, proof, and serve hot to clients worldwide.
-        </p>
+        <h2 class="section-title"><?php echo get_setting('about_title'); ?></h2>
+        <p class="about-desc"><?php echo get_setting('about_desc'); ?></p>
         
-        <!-- About highlights -->
         <div class="about-highlights">
           <div class="highlight-item">
             <div class="highlight-title-wrap">
@@ -240,9 +232,7 @@
     </div>
   </section>
 
-  <!-- ==========================================
-       SERVICES SECTION
-       ========================================== -->
+  <!-- SERVICES SECTION -->
   <section class="services" id="services">
     <div class="container">
       <div class="section-header reveal">
@@ -251,119 +241,36 @@
         <p class="section-subtitle">Explore our core recipe cards. We specialize in producing sleek layouts and consistent styling across all visual platforms.</p>
       </div>
 
-      <!-- Services Grid -->
       <div class="services-grid">
-        <!-- Service 1: Website Design -->
-        <div class="service-card reveal">
+        <?php 
+        $delay = 0;
+        foreach ($services as $service): 
+          $delayClass = $delay > 0 ? "reveal-delay-$delay" : "";
+        ?>
+        <div class="service-card reveal <?php echo $delayClass; ?>">
           <div class="service-icon-wrap">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="20" height="16" x="2" y="4" rx="2"/>
-              <path d="M6 8h.01M10 8h.01M14 8h.01M2 12h20"/>
+              <?php echo $service['icon_svg']; ?>
             </svg>
           </div>
-          <h3 class="service-card-title">Website Design</h3>
-          <p class="service-card-desc">Bespoke portfolio, product, and brand sites. Engineered to look stunning on mobile devices and desktops, with layout grids built to impress.</p>
+          <h3 class="service-card-title"><?php echo htmlspecialchars($service['title']); ?></h3>
+          <p class="service-card-desc"><?php echo htmlspecialchars($service['description']); ?></p>
           <a href="#contact" class="service-link">
-            Order Website
+            <?php echo htmlspecialchars($service['link_text']); ?>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
             </svg>
           </a>
         </div>
-
-        <!-- Service 2: Landing Pages -->
-        <div class="service-card reveal reveal-delay-1">
-          <div class="service-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="18" height="18" x="3" y="3" rx="2"/>
-              <path d="M9 17h6M9 13h6M9 9h4"/>
-            </svg>
-          </div>
-          <h3 class="service-card-title">Landing Pages</h3>
-          <p class="service-card-desc">High-converting single pages crafted to launch products, capture leads, and outline features with highly engaging visual hierarchy.</p>
-          <a href="#contact" class="service-link">
-            Order Page
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
-
-        <!-- Service 3: Graphic Design -->
-        <div class="service-card reveal reveal-delay-2">
-          <div class="service-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-            </svg>
-          </div>
-          <h3 class="service-card-title">Graphic Design</h3>
-          <p class="service-card-desc">Artistic and advertising visuals designed for physical prints, digital displays, and complex layouts. Styled to perfection.</p>
-          <a href="#contact" class="service-link">
-            Order Graphics
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
-
-        <!-- Service 4: Brand Identity -->
-        <div class="service-card reveal">
-          <div class="service-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <h3 class="service-card-title">Brand Identity</h3>
-          <p class="service-card-desc">Bespoke logo design, color systems, style guides, and typography plans that build solid credibility and unified presentation.</p>
-          <a href="#contact" class="service-link">
-            Order Branding
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
-
-        <!-- Service 5: Social Media Creatives -->
-        <div class="service-card reveal reveal-delay-1">
-          <div class="service-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-            </svg>
-          </div>
-          <h3 class="service-card-title">Social Media Creatives</h3>
-          <p class="service-card-desc">Visually engaging custom posts, reels graphic shells, story templates, and banners that command attention in crowded social feeds.</p>
-          <a href="#contact" class="service-link">
-            Order Creatives
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
-
-        <!-- Service 6: Digital Campaigns -->
-        <div class="service-card reveal reveal-delay-2">
-          <div class="service-icon-wrap">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="m22 2-7 20-4-9-9-4Z"/>
-              <path d="M22 2 11 13"/>
-            </svg>
-          </div>
-          <h3 class="service-card-title">Digital Campaigns</h3>
-          <p class="service-card-desc">Integrated advertising banners, promotional pages, and email visuals linked by a unified strategic message and glowing layout style.</p>
-          <a href="#contact" class="service-link">
-            Order Campaign
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </a>
-        </div>
+        <?php 
+          $delay = ($delay + 1) % 3;
+        endforeach; 
+        ?>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================
-       PORTFOLIO SECTION
-       ========================================== -->
+  <!-- PORTFOLIO SECTION -->
   <section class="portfolio" id="portfolio">
     <div class="container">
       <div class="section-header reveal">
@@ -372,7 +279,6 @@
         <p class="section-subtitle">Take a look at our showcase of active digital bakes. Filter categories using the tabs below to explore specific recipe results.</p>
       </div>
 
-      <!-- Categories Filter Tabs -->
       <div class="portfolio-filters reveal">
         <button class="filter-btn active" data-filter="all">All Bakes</button>
         <button class="filter-btn" data-filter="websites">Websites</button>
@@ -382,104 +288,37 @@
         <button class="filter-btn" data-filter="uiconcepts">UI Concepts</button>
       </div>
 
-      <!-- Works Grid -->
       <div class="portfolio-grid" id="portfolio-grid">
-        <!-- Item 1: Websites -->
-        <div class="portfolio-item reveal" data-category="websites">
+        <?php 
+        $delay = 0;
+        foreach ($portfolio as $item): 
+          $delayClass = $delay > 0 ? "reveal-delay-1" : "";
+        ?>
+        <div class="portfolio-item reveal <?php echo $delayClass; ?>" data-category="<?php echo htmlspecialchars($item['category']); ?>">
           <div class="portfolio-img-wrap">
-            <img src="assets/portfolio_websites.png" alt="Sleek digital agency landing page display mockup" loading="lazy">
+            <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" loading="lazy">
             <div class="portfolio-overlay">
               <div class="portfolio-overlay-text">
-                <span class="portfolio-tag">Websites</span>
-                <h4 class="portfolio-overlay-title">Nova Digital Landing Page</h4>
+                <span class="portfolio-tag"><?php echo htmlspecialchars(ucfirst($item['category'])); ?></span>
+                <h4 class="portfolio-overlay-title"><?php echo htmlspecialchars($item['title']); ?></h4>
               </div>
             </div>
           </div>
           <div class="portfolio-info">
-            <span class="portfolio-category">Websites</span>
-            <h3 class="portfolio-title">Nova Landing Page</h3>
-            <p class="portfolio-desc">A premium portfolio website featuring ultra-smooth scrolling, light glassmorphism, and minimal structure.</p>
+            <span class="portfolio-category"><?php echo htmlspecialchars(ucfirst($item['category'])); ?></span>
+            <h3 class="portfolio-title"><?php echo htmlspecialchars($item['title']); ?></h3>
+            <p class="portfolio-desc"><?php echo htmlspecialchars($item['description']); ?></p>
           </div>
         </div>
-
-        <!-- Item 2: Posters -->
-        <div class="portfolio-item reveal reveal-delay-1" data-category="posters">
-          <div class="portfolio-img-wrap">
-            <img src="assets/portfolio_posters.png" alt="Minimalist poster mockup displaying agency message" loading="lazy">
-            <div class="portfolio-overlay">
-              <div class="portfolio-overlay-text">
-                <span class="portfolio-tag">Posters</span>
-                <h4 class="portfolio-overlay-title">Fresh Baked Poster Series</h4>
-              </div>
-            </div>
-          </div>
-          <div class="portfolio-info">
-            <span class="portfolio-category">Posters</span>
-            <h3 class="portfolio-title">Fresh Ideas Poster</h3>
-            <p class="portfolio-desc">High-contrast typographical poster with custom grain overlay textures and bold editorial font scales.</p>
-          </div>
-        </div>
-
-        <!-- Item 3: Branding -->
-        <div class="portfolio-item reveal" data-category="branding">
-          <div class="portfolio-img-wrap">
-            <img src="assets/portfolio_branding.png" alt="Unified corporate brand design assets layout" loading="lazy">
-            <div class="portfolio-overlay">
-              <div class="portfolio-overlay-text">
-                <span class="portfolio-tag">Branding</span>
-                <h4 class="portfolio-overlay-title">Rise Bakers Identity</h4>
-              </div>
-            </div>
-          </div>
-          <div class="portfolio-info">
-            <span class="portfolio-category">Branding</span>
-            <h3 class="portfolio-title">Rise Identity System</h3>
-            <p class="portfolio-desc">Complete corporate brand package, featuring business card systems, modern colors, and brand books.</p>
-          </div>
-        </div>
-
-        <!-- Item 4: Social Media -->
-        <div class="portfolio-item reveal reveal-delay-1" data-category="social">
-          <div class="portfolio-img-wrap">
-            <img src="assets/portfolio_social.png" alt="Sleek Instagram post grid mockup" loading="lazy">
-            <div class="portfolio-overlay">
-              <div class="portfolio-overlay-text">
-                <span class="portfolio-tag">Social Media</span>
-                <h4 class="portfolio-overlay-title">Zenith Campaign Slides</h4>
-              </div>
-            </div>
-          </div>
-          <div class="portfolio-info">
-            <span class="portfolio-category">Social Media</span>
-            <h3 class="portfolio-title">Zenith Social Creatives</h3>
-            <p class="portfolio-desc">Scroll-stopping post layouts designed to scale user interaction with glowing gradient lines.</p>
-          </div>
-        </div>
-
-        <!-- Item 5: UI Concepts -->
-        <div class="portfolio-item reveal" data-category="uiconcepts">
-          <div class="portfolio-img-wrap">
-            <img src="assets/portfolio_uiconcepts.png" alt="Sleek mobile app dash UI mockup" loading="lazy">
-            <div class="portfolio-overlay">
-              <div class="portfolio-overlay-text">
-                <span class="portfolio-tag">UI Concepts</span>
-                <h4 class="portfolio-overlay-title">Knead App Interface</h4>
-              </div>
-            </div>
-          </div>
-          <div class="portfolio-info">
-            <span class="portfolio-category">UI Concepts</span>
-            <h3 class="portfolio-title">Knead Dashboard Design</h3>
-            <p class="portfolio-desc">Mobile application prototype utilizing soft-rounded card systems and caramel highlights.</p>
-          </div>
-        </div>
+        <?php 
+          $delay = ($delay + 1) % 2;
+        endforeach; 
+        ?>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================
-       CREATIVE PROCESS SECTION
-       ========================================== -->
+  <!-- CREATIVE PROCESS SECTION -->
   <section class="process" id="process">
     <div class="container">
       <div class="section-header reveal">
@@ -488,66 +327,31 @@
         <p class="section-subtitle">We follow a strict recipe list for brand success. Every step of our workflow ensures the best outcome.</p>
       </div>
 
-      <!-- Timeline steps -->
       <div class="process-timeline">
-        <!-- Step 1: Discover -->
-        <div class="process-step reveal">
+        <?php 
+        $delay = 0;
+        foreach ($processSteps as $step): 
+          $delayClass = $delay > 0 ? "reveal-delay-$delay" : "";
+        ?>
+        <div class="process-step reveal <?php echo $delayClass; ?>">
           <div class="process-node">
-            <!-- Counter -->
-            <span class="process-step-num">01</span>
-            <!-- Icon -->
+            <span class="process-step-num"><?php echo htmlspecialchars($step['step_number']); ?></span>
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.3-4.3"/>
+              <?php echo $step['icon_svg']; ?>
             </svg>
           </div>
-          <h3 class="process-step-title">Discover</h3>
-          <p class="process-step-desc">Gathering project requirements, analyzing branding constraints, and understanding core user targets.</p>
+          <h3 class="process-step-title"><?php echo htmlspecialchars($step['title']); ?></h3>
+          <p class="process-step-desc"><?php echo htmlspecialchars($step['description']); ?></p>
         </div>
-
-        <!-- Step 2: Bake the Idea -->
-        <div class="process-step reveal reveal-delay-1">
-          <div class="process-node">
-            <span class="process-step-num">02</span>
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
-          </div>
-          <h3 class="process-step-title">Bake the Idea</h3>
-          <p class="process-step-desc">Mixing strategy with imagination. Drafting conceptual pathways and proofing creative approaches.</p>
-        </div>
-
-        <!-- Step 3: Design -->
-        <div class="process-step reveal reveal-delay-2">
-          <div class="process-node">
-            <span class="process-step-num">03</span>
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-            </svg>
-          </div>
-          <h3 class="process-step-title">Design</h3>
-          <p class="process-step-desc">Shaping modern typography, establishing rich color palettes, and refining visual prototypes.</p>
-        </div>
-
-        <!-- Step 4: Deliver -->
-        <div class="process-step reveal reveal-delay-3">
-          <div class="process-node">
-            <span class="process-step-num">04</span>
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <path d="m9 11 3 3L22 4"/>
-            </svg>
-          </div>
-          <h3 class="process-step-title">Deliver</h3>
-          <p class="process-step-desc">Serving your digital platforms optimized, checked for details, and ready to go live immediately.</p>
-        </div>
+        <?php 
+          $delay++;
+        endforeach; 
+        ?>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================
-       WHY CHOOSE ADLOAF (BENTO GRID)
-       ========================================== -->
+  <!-- BENTO GRID -->
   <section class="why-us">
     <div class="container">
       <div class="section-header reveal">
@@ -556,85 +360,44 @@
         <p class="section-subtitle">We combine premium design with strategic reasoning. Explore the core ingredients behind our project approach.</p>
       </div>
 
-      <!-- Bento Grid -->
       <div class="bento-grid">
-        <!-- Card 1: Fresh Ideas (Large dark card) -->
-        <div class="bento-item bento-col-2 bento-row-2 bento-item-dark reveal">
+        <?php 
+        $delay = 0;
+        foreach ($bentoCards as $card): 
+          $delayClass = $delay > 0 ? "reveal-delay-$delay" : "";
+        ?>
+        <div class="bento-item <?php echo htmlspecialchars($card['card_class']); ?> reveal <?php echo $delayClass; ?>">
           <div>
+            <?php if (!empty($card['icon_svg'])): ?>
             <div class="bento-icon">
-              <!-- Custom Sparkle/Light Icon -->
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.9 1.375H2.03c-1.87 0-2.65 2.41-1.13 3.515l4.945 3.59a2 2 0 0 1 .69 2.124L4.623 21.23c-.58 1.766 1.444 3.237 2.964 2.138L12 19.78l4.413 3.588c1.52 1.1 3.544-.37 2.964-2.138l-1.912-5.813a2 2 0 0 1 .69-2.124l4.945-3.59c1.52-1.1.74-3.515-1.13-3.515h-6.158a2 2 0 0 1-1.9-1.375L12 3z"/>
+                <?php echo $card['icon_svg']; ?>
               </svg>
             </div>
-            <h3 class="bento-title">Fresh Ideas</h3>
-            <p class="bento-desc">We never reuse stale templates. Every single client brief receives a customized design concept inspired by warm creative trends and tailored for clear strategic impact. Our design processes allow us to bake unique digital interfaces from scratch.</p>
+            <?php endif; ?>
+            <?php if (!empty($card['stat_num'])): ?>
+            <span class="bento-stat-num"><?php echo htmlspecialchars($card['stat_num']); ?></span>
+            <?php endif; ?>
+            <h3 class="bento-title" <?php echo !empty($card['stat_num']) ? 'style="margin-top: 0.5rem;"' : ''; ?>><?php echo htmlspecialchars($card['title']); ?></h3>
+            <p class="bento-desc"><?php echo htmlspecialchars($card['description']); ?></p>
           </div>
+          <?php if (!empty($card['stat_label'])): ?>
           <div>
-            <span class="bento-stat-label">Unique Recipes Only</span>
+            <span class="bento-stat-label"><?php echo htmlspecialchars($card['stat_label']); ?></span>
           </div>
+          <?php endif; ?>
         </div>
-
-        <!-- Card 2: Stat card (Clean execution) -->
-        <div class="bento-item reveal reveal-delay-1">
-          <div>
-            <span class="bento-stat-num">100%</span>
-            <h3 class="bento-title" style="margin-top: 0.5rem;">Clean Execution</h3>
-            <p class="bento-desc">Zero cluttered code, bloated libraries, or messy graphic packages. We keep file delivery crisp.</p>
-          </div>
-        </div>
-
-        <!-- Card 3: Brand-focused Design -->
-        <div class="bento-item reveal reveal-delay-2">
-          <div>
-            <div class="bento-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="6"/>
-                <circle cx="12" cy="12" r="2"/>
-              </svg>
-            </div>
-            <h3 class="bento-title">Brand-Focused</h3>
-            <p class="bento-desc">Design structured around your real brand value to drive visitor conversions.</p>
-          </div>
-        </div>
-
-        <!-- Card 4: Fast Delivery (Served Hot) -->
-        <div class="bento-item reveal">
-          <div>
-            <div class="bento-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
-            </div>
-            <h3 class="bento-title">Served Fast</h3>
-            <p class="bento-desc">Timelines are strictly respected. We deliver your assets warm and ready-to-run on schedule.</p>
-          </div>
-        </div>
-
-        <!-- Card 5: Storytelling (Wide card) -->
-        <div class="bento-item bento-col-2 reveal reveal-delay-1">
-          <div>
-            <div class="bento-icon">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
-                <path d="M6 6h10M6 10h10"/>
-              </svg>
-            </div>
-            <h3 class="bento-title">Creative Storytelling</h3>
-            <p class="bento-desc">We merge visual aesthetics with compelling brand narratives. This ensures your visitors do not just glance at your landing page, but read, remember, and identify with your strategic value long after leaving.</p>
-          </div>
-        </div>
+        <?php 
+          $delay = ($delay + 1) % 3;
+        endforeach; 
+        ?>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================
-       CONTACT SECTION
-       ========================================== -->
+  <!-- CONTACT SECTION -->
   <section class="contact" id="contact">
     <div class="container contact-grid">
-      <!-- Left: Contact Details -->
       <div class="contact-info-wrap reveal">
         <span class="section-badge">Bake with Us</span>
         <h2 class="section-title">Send a Recipe Request</h2>
@@ -642,75 +405,64 @@
           Have an idea or brand project waiting to be shaped? Drop us a line below or reach out via our social links. We serve hot creative inputs directly to your inbox.
         </p>
 
-        <!-- Channels -->
         <div class="contact-channels">
-          <!-- Email Contact -->
           <div class="contact-item">
             <div class="contact-icon-box">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="16" x="2" y="4" rx="2"/>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
               </svg>
             </div>
             <div>
               <div class="contact-item-title">E-mail Address</div>
-              <a href="mailto:bake@adloaf.com" class="contact-item-link" id="contact-email">bake@adloaf.com</a>
+              <a href="mailto:<?php echo htmlspecialchars(get_setting('contact_email')); ?>" class="contact-item-link" id="contact-email"><?php echo htmlspecialchars(get_setting('contact_email')); ?></a>
             </div>
           </div>
 
-          <!-- WhatsApp Contact -->
           <div class="contact-item">
             <div class="contact-icon-box">
-              <!-- Custom WhatsApp SVG Icon -->
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
               </svg>
             </div>
             <div>
               <div class="contact-item-title">WhatsApp Chat</div>
-              <a href="https://wa.me/1234567890" target="_blank" rel="noopener" class="contact-item-link" id="contact-whatsapp">Chat on WhatsApp</a>
+              <a href="<?php echo htmlspecialchars(get_setting('contact_whatsapp')); ?>" target="_blank" rel="noopener" class="contact-item-link" id="contact-whatsapp">Chat on WhatsApp</a>
             </div>
           </div>
         </div>
 
-        <!-- Social Media Buttons -->
         <div class="social-links">
-          <a href="https://dribbble.com" class="social-btn" target="_blank" rel="noopener" aria-label="Dribbble Account Link">
+          <a href="<?php echo htmlspecialchars(get_setting('social_dribbble')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Dribbble Account Link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.49-11.05 1-11.6 8.56"/>
             </svg>
           </a>
-          <a href="https://behance.net" class="social-btn" target="_blank" rel="noopener" aria-label="Behance Account Link">
+          <a href="<?php echo htmlspecialchars(get_setting('social_behance')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Behance Account Link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 19a5 5 0 0 0 5-5v-1a5 5 0 0 0-5-5M2 5h7a4 4 0 0 1 0 8H2V5Zm0 8h8a4 4 0 0 1 0 8H2v-8ZM14 6h7"/>
             </svg>
           </a>
-          <a href="https://linkedin.com" class="social-btn" target="_blank" rel="noopener" aria-label="LinkedIn Account Link">
+          <a href="<?php echo htmlspecialchars(get_setting('social_linkedin')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="LinkedIn Account Link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
-              <circle cx="4" cy="4" r="2"/>
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/>
             </svg>
           </a>
-          <a href="https://instagram.com" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram Account Link">
+          <a href="<?php echo htmlspecialchars(get_setting('social_instagram')); ?>" class="social-btn" target="_blank" rel="noopener" aria-label="Instagram Account Link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/>
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37zM17.5 6.5h.01"/>
             </svg>
           </a>
         </div>
       </div>
 
-      <!-- Right: Premium Custom Validation Form -->
       <div class="contact-card reveal reveal-delay-1">
         <form class="contact-form" id="contact-form" novalidate>
           <div class="form-row-2">
-            <!-- Name Input -->
             <div class="form-group">
               <label for="form-name" class="form-label">Full Name</label>
               <input type="text" id="form-name" class="form-input" placeholder="Your name" required>
             </div>
-            <!-- Email Input -->
             <div class="form-group">
               <label for="form-email" class="form-label">Email Address</label>
               <input type="email" id="form-email" class="form-input" placeholder="you@example.com" required>
@@ -718,12 +470,10 @@
           </div>
 
           <div class="form-row-2">
-            <!-- Subject Input -->
             <div class="form-group">
               <label for="form-subject" class="form-label">Subject</label>
               <input type="text" id="form-subject" class="form-input" placeholder="Project name / query" required>
             </div>
-            <!-- Service Dropdown -->
             <div class="form-group">
               <label for="form-service" class="form-label">Recipe Type</label>
               <select id="form-service" class="form-input" style="height: 53px;" required>
@@ -738,34 +488,27 @@
             </div>
           </div>
 
-          <!-- Message Textarea -->
           <div class="form-group">
             <label for="form-message" class="form-label">Project Ingredients</label>
             <textarea id="form-message" class="form-textarea" placeholder="Outline your project goals, timelines, and strategy details..." required></textarea>
           </div>
 
-          <!-- Alert Success Box -->
           <div class="form-message" id="form-success-box">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <path d="m9 11 3 3L22 4"/>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
             </svg>
             <span>Your request has been placed in the oven! We will reply soon.</span>
           </div>
 
-          <!-- Submit Button -->
           <button type="submit" class="btn btn-primary btn-loaf" id="form-submit-btn" style="width: 100%;">Bake the Message</button>
         </form>
       </div>
     </div>
   </section>
 
-  <!-- ==========================================
-       FOOTER
-       ========================================== -->
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container footer-top">
-      <!-- Footer Brand Column -->
       <div class="footer-brand">
         <a href="#" class="logo footer-logo" aria-label="Adloaf Footer Home">
           <div class="logo-icon-wrap">
@@ -782,7 +525,6 @@
         </p>
       </div>
 
-      <!-- Links Column -->
       <div class="footer-links-col">
         <h4 class="footer-col-title">Navigation</h4>
         <ul class="footer-links-list">
@@ -794,12 +536,11 @@
         </ul>
       </div>
 
-      <!-- Contact Info Column -->
       <div class="footer-meta-col">
         <h4 class="footer-col-title">Oven Hours</h4>
         <div class="footer-contact-item">
           <span>Collaboration email</span>
-          bake@adloaf.com
+          <?php echo htmlspecialchars(get_setting('contact_email')); ?>
         </div>
         <div class="footer-contact-item">
           <span>Global hours</span>
@@ -808,9 +549,8 @@
       </div>
     </div>
 
-    <!-- Bottom copyright row -->
     <div class="container footer-bottom">
-      <p class="copyright">&copy; 2026 Adloaf. All rights reserved.</p>
+      <p class="copyright">&copy; <?php echo date('Y'); ?> Adloaf. All rights reserved.</p>
       <div class="footer-nav">
         <a href="#home" class="footer-nav-link">Privacy Policy</a>
         <a href="#home" class="footer-nav-link">Terms of Service</a>
