@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 echo json_encode(['success' => true, 'message' => 'Message stored successfully']);
             } catch (PDOException $e) {
-                echo json_encode(['success' => false, 'error' => 'Database error']);
+                echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
             }
         } else {
             echo json_encode(['success' => false, 'error' => 'Missing fields']);
