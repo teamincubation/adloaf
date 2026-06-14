@@ -3,37 +3,17 @@ require_once __DIR__ . '/lib/helpers.php';
 
 header('Content-Type: text/plain');
 
-echo "=== Testing Gemini API Connection ===\n\n";
+echo "=== Testing Gemini API Connection with thinkingBudget = 0 ===\n\n";
 
 $apiKey = GEMINI_API_KEY;
-echo "API Key Length: " . strlen($apiKey) . "\n";
-echo "API Key Prefix: " . substr($apiKey, 0, 8) . "...\n\n";
-
-// Test 1: Concept Generator
-echo "--- Test 1: Concept Generator ---\n";
-$service = "Web Development";
-$deadline = "2026-06-25";
-$desc = "Create a modern portfolio website for a design agency.";
-$name = "Adnan Vellicheri";
-$business = "adLoaf";
-
-$t1_start = microtime(true);
-$concept = ai_generate_detailed_concept($service, $deadline, $desc, $name, $business, []);
-$t1_end = microtime(true);
-echo "Time Taken: " . round($t1_end - $t1_start, 2) . "s\n";
-echo "Result:\n";
-if ($concept) {
-    echo $concept . "\n";
-} else {
-    echo "FAILED (Returned null)\n";
-}
-echo "\n";
 
 // Test 2: Market Analysis
 echo "--- Test 2: Market Analysis ---\n";
 $t2_start = microtime(true);
 
-// We will replicate the ai_market_analysis body here with error reporting enabled
+$service = "Web Development";
+$desc = "Create a modern portfolio website for a design agency.";
+
 $prompt = "You are a professional IT consultant and digital agency estimator.
 Analyze the market pricing and structure for the following project request:
 Service: {$service}
@@ -62,8 +42,11 @@ $payload = json_encode([
     'contents' => [['parts' => [['text' => $prompt]]]],
     'generationConfig' => [
         'temperature' => 0.2, 
-        'maxOutputTokens' => 500,
-        'responseMimeType' => 'application/json'
+        'maxOutputTokens' => 2000,
+        'responseMimeType' => 'application/json',
+        'thinkingConfig' => [
+            'thinkingBudget' => 0
+        ]
     ]
 ]);
 
@@ -73,7 +56,7 @@ $ctx = stream_context_create([
         'header'  => "Content-Type: application/json\r\nContent-Length: " . strlen($payload),
         'content' => $payload,
         'timeout' => 15,
-        'ignore_errors' => true // See full HTTP response even on error
+        'ignore_errors' => true
     ]
 ]);
 
