@@ -671,11 +671,15 @@ a {
 
 .about-card-1 {
   background-color: var(--bg-dark);
-  color: var(--text-light);
+  color: #E0D7C0;
   top: 0;
   left: 0;
   z-index: 3;
   transform: rotate(-2deg);
+}
+.about-card-1 .about-card-title,
+.about-card-1 .about-card-text {
+  color: #E0D7C0 !important;
 }
 
 .about-card-2 {

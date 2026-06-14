@@ -24,17 +24,13 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
         $clientSecret = site_setting('google_client_secret');
         $code = $_GET['code'];
         
-        $siteUrlHost = parse_url(SITE_URL, PHP_URL_HOST);
-        $currentHost = $_SERVER['HTTP_HOST'];
-        $cleanSiteHost = preg_replace('/^www\./i', '', $siteUrlHost);
-        $cleanCurrentHost = preg_replace('/^www\./i', '', $currentHost);
-        
-        if ($cleanSiteHost === $cleanCurrentHost) {
-            $redirectUri = SITE_URL . '/auth/google-callback.php';
-        } else {
-            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-            $redirectUri = $scheme . '://' . $currentHost . '/auth/google-callback.php';
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        if (strpos($dir, '/auth') === false) {
+            $dir = rtrim($dir, '/') . '/auth';
         }
+        $redirectUri = $scheme . '://' . $host . $dir . '/google-callback.php';
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://oauth2.googleapis.com/token');

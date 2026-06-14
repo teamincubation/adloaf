@@ -5,11 +5,18 @@ $success = '';
 $errorMsg = '';
 
 try {
-    // Handle Delete Client
+    // Fetch Services for title dropdown
+    $servicesListQuery = $pdo->query("SELECT title FROM services ORDER BY sort_order ASC");
+    $servicesList = $servicesListQuery->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($servicesList)) {
+        $servicesList = ['Website Design', 'Landing Pages', 'Graphic Design', 'Brand Identity', 'Social Media Creatives', 'Digital Campaigns'];
+    }
+
+    // Handle Delete Client (deletes from users_public, cascading to projects)
     if (isset($_GET['delete_client'])) {
-        $stmt = $pdo->prepare("DELETE FROM clients WHERE id = ?");
+        $stmt = $pdo->prepare("DELETE FROM users_public WHERE id = ?");
         $stmt->execute([$_GET['delete_client']]);
-        $success = "Client deleted successfully.";
+        $success = "Client user deleted successfully.";
     }
 
     // Handle Delete Project
@@ -19,16 +26,29 @@ try {
         $success = "Project deleted successfully.";
     }
 
-    // Handle Add/Edit Client
+    // Handle Add/Edit Client (saving directly to users_public)
     if (isset($_POST['action']) && $_POST['action'] == 'save_client') {
+        $name = trim($_POST['name'] ?? '');
+        $email = strtolower(trim($_POST['email'] ?? ''));
+        $phone = trim($_POST['phone'] ?? '');
+        
         if (!empty($_POST['client_id'])) {
-            $stmt = $pdo->prepare("UPDATE clients SET name=?, email=?, phone=? WHERE id=?");
-            $stmt->execute([$_POST['name'], $_POST['email'], $_POST['phone'], $_POST['client_id']]);
-            $success = "Client updated.";
+            $stmt = $pdo->prepare("UPDATE users_public SET full_name=?, email=?, whatsapp=? WHERE id=?");
+            $stmt->execute([$name, $email, $phone, $_POST['client_id']]);
+            $success = "Client user updated successfully.";
         } else {
-            $stmt = $pdo->prepare("INSERT INTO clients (name, email, phone) VALUES (?, ?, ?)");
-            $stmt->execute([$_POST['name'], $_POST['email'], $_POST['phone']]);
-            $success = "Client added.";
+            // Check if email already exists
+            $chk = $pdo->prepare("SELECT id FROM users_public WHERE email = ?");
+            $chk->execute([$email]);
+            if ($chk->fetch()) {
+                $errorMsg = "A client user with this email address already exists.";
+            } else {
+                $randomPass = bin2hex(random_bytes(16));
+                $hash = password_hash($randomPass, PASSWORD_BCRYPT);
+                $stmt = $pdo->prepare("INSERT INTO users_public (full_name, email, whatsapp, password_hash) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$name, $email, $phone, $hash]);
+                $success = "Client user registered successfully.";
+            }
         }
     }
 
@@ -45,15 +65,15 @@ try {
         }
     }
 
-    // Fetch Clients
-    $clientsQuery = $pdo->query("SELECT * FROM clients ORDER BY name ASC");
+    // Fetch Clients (from users_public)
+    $clientsQuery = $pdo->query("SELECT id, full_name as name, email, whatsapp as phone FROM users_public ORDER BY full_name ASC");
     $clients = $clientsQuery->fetchAll();
 
-    // Fetch Projects
+    // Fetch Projects (joining users_public)
     $projectsQuery = $pdo->query("
-        SELECT p.*, c.name as client_name 
+        SELECT p.*, c.full_name as client_name 
         FROM projects p 
-        JOIN clients c ON p.client_id = c.id 
+        JOIN users_public c ON p.client_id = c.id 
         ORDER BY p.status DESC, p.created_at DESC
     ");
     $projects = $projectsQuery->fetchAll();
@@ -61,7 +81,7 @@ try {
     // Check if editing Client
     $editClient = null;
     if (isset($_GET['edit_client'])) {
-        $stmt = $pdo->prepare("SELECT * FROM clients WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT id, full_name as name, email, whatsapp as phone FROM users_public WHERE id = ?");
         $stmt->execute([$_GET['edit_client']]);
         $editClient = $stmt->fetch();
     }
@@ -72,10 +92,14 @@ try {
         $stmt = $pdo->prepare("SELECT * FROM projects WHERE id = ?");
         $stmt->execute([$_GET['edit_project']]);
         $editProject = $stmt->fetch();
+        
+        if ($editProject && !in_array($editProject['title'], $servicesList)) {
+            array_unshift($servicesList, $editProject['title']);
+        }
     }
 
 } catch (PDOException $e) {
-    $errorMsg = "Database error. Did you run the admin_upgrades.sql script?";
+    $errorMsg = "Database error. Please run migration and DB updates.";
     $clients = [];
     $projects = [];
 }
@@ -180,8 +204,12 @@ try {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Project Title</label>
-                        <input type="text" name="title" class="form-input" required value="<?php echo $editProject ? htmlspecialchars($editProject['title']) : ''; ?>">
+                        <label class="form-label">Service Type (Project Title)</label>
+                        <select name="title" class="form-input" style="height: 53px;" required>
+                            <?php foreach ($servicesList as $srv): ?>
+                                <option value="<?php echo htmlspecialchars($srv); ?>" <?php echo ($editProject && $editProject['title'] === $srv) ? 'selected' : ''; ?>><?php echo htmlspecialchars($srv); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                 </div>
 

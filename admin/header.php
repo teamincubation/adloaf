@@ -123,6 +123,7 @@ require_once '../config.php';
                 <li><a href="bento.php"          class="<?php echo $current_page == 'bento.php'         ? 'active' : ''; ?>">🧱 Bento Grid</a></li>
                 <li><a href="clients_brand.php"  class="<?php echo $current_page == 'clients_brand.php' ? 'active' : ''; ?>">🏷 Client Logos</a></li>
                 <li><a href="messages.php"       class="<?php echo $current_page == 'messages.php'      ? 'active' : ''; ?>">✉ Messages</a></li>
+                <li><a href="visitors.php"       class="<?php echo $current_page == 'visitors.php'      ? 'active' : ''; ?>">🌐 Site Visitors</a></li>
                 <li><a href="settings.php"       class="<?php echo $current_page == 'settings.php'      ? 'active' : ''; ?>">⚙ Site Settings</a></li>
             </ul>
             <div style="margin-top: auto;">

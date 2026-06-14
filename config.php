@@ -52,6 +52,63 @@ try {
                 ->execute([$dec, $dec]);
         }
     } catch (PDOException $e) {}
+
+    // Re-link projects to users_public and clean up clients table
+    try {
+        // 1. Add bake_request_id column to projects if it doesn't exist
+        try {
+            $pdo->exec("ALTER TABLE projects ADD COLUMN bake_request_id INT NULL");
+        } catch (PDOException $e) {}
+
+        // 2. Migration: Sync clients to users_public and update projects.client_id
+        $clientsTableExists = false;
+        try {
+            $pdo->query("SELECT 1 FROM clients LIMIT 1");
+            $clientsTableExists = true;
+        } catch (PDOException $e) {}
+
+        if ($clientsTableExists) {
+            $clients = $pdo->query("SELECT * FROM clients")->fetchAll();
+            foreach ($clients as $c) {
+                $chk = $pdo->prepare("SELECT id FROM users_public WHERE email = ?");
+                $chk->execute([$c['email']]);
+                $existingUser = $chk->fetch();
+                if (!$existingUser) {
+                    $randomPass = bin2hex(random_bytes(16));
+                    $hash = password_hash($randomPass, PASSWORD_BCRYPT);
+                    $ins = $pdo->prepare("INSERT INTO users_public (full_name, email, whatsapp, password_hash) VALUES (?, ?, ?, ?)");
+                    $ins->execute([$c['name'], $c['email'], $c['phone'], $hash]);
+                    $newId = $pdo->lastInsertId();
+                    
+                    $upd = $pdo->prepare("UPDATE projects SET client_id = ? WHERE client_id = ?");
+                    $upd->execute([$newId, $c['id']]);
+                } else {
+                    $upd = $pdo->prepare("UPDATE projects SET client_id = ? WHERE client_id = ?");
+                    $upd->execute([$existingUser['id'], $c['id']]);
+                }
+            }
+
+            // Drop foreign key constraints referencing clients
+            $constraints = ['projects_ibfk_1', 'fk_projects_clients', 'projects_client_id_foreign'];
+            foreach ($constraints as $con) {
+                try {
+                    $pdo->exec("ALTER TABLE projects DROP FOREIGN KEY {$con}");
+                } catch (PDOException $e) {}
+            }
+
+            // Drop clients table
+            try {
+                $pdo->exec("DROP TABLE IF EXISTS clients");
+            } catch (PDOException $e) {}
+        }
+    } catch (Exception $e) {}
+
+    // Ensure foreign key link from projects to users_public
+    try {
+        $pdo->exec("ALTER TABLE projects ADD CONSTRAINT fk_projects_users FOREIGN KEY (client_id) REFERENCES users_public(id) ON DELETE CASCADE");
+    } catch (PDOException $e) {}
+
+
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());
 }

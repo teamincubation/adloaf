@@ -3,6 +3,10 @@ require_once 'header.php';
 require_once '../lib/Mailer.php';
 
 $success = '';
+if (isset($_SESSION['success_message'])) {
+    $success = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
+}
 $errorMsg = '';
 
 // Load currency symbol
@@ -32,7 +36,9 @@ if (isset($_GET['delete_file_path']) && isset($_GET['request_id'])) {
             }
             $newJson = empty($updatedArray) ? null : json_encode($updatedArray);
             $pdo->prepare("UPDATE bake_requests SET uploaded_files = ? WHERE id = ?")->execute([$newJson, $reqId]);
-            $success = "Attachment deleted successfully.";
+            $_SESSION['success_message'] = "Attachment deleted successfully.";
+            header("Location: bake_requests.php" . (isset($_GET['archive']) && $_GET['archive'] == 1 ? "?archive=1" : ""));
+            exit;
         }
     }
 }
@@ -47,14 +53,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $pdo->prepare("UPDATE bake_requests SET status=?, total_cost=?, admin_notes=? WHERE id=?")
         ->execute([$status, $totalCost, $adminNote, $reqId]);
     
-    $success = "Bake request updated successfully.";
-
     // Send email notification with status, cost, notes, and payment details
     $reqDetails = $pdo->prepare("SELECT br.*, u.full_name, u.email, u.whatsapp FROM bake_requests br JOIN users_public u ON br.user_id = u.id WHERE br.id = ?");
     $reqDetails->execute([$reqId]);
     $reqData = $reqDetails->fetch();
 
     if ($reqData) {
+        // Automatically sync Accepted/Approved/Completed requests to projects table
+        if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
+            $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
+            $chkProj->execute([$reqId]);
+            if (!$chkProj->fetchColumn()) {
+                $projStatus = 'Pending';
+                if ($status === 'Completed') {
+                    $projStatus = 'Completed';
+                } else if ($status === 'Approved' || $status === 'Accepted') {
+                    $projStatus = 'Ongoing';
+                }
+                
+                $insProj = $pdo->prepare("INSERT INTO projects (client_id, title, description, price, paid_amount, status, due_date, bake_request_id) VALUES (?, ?, ?, ?, 0.00, ?, ?, ?)");
+                $insProj->execute([
+                    $reqData['user_id'],
+                    $reqData['service_type'],
+                    $reqData['project_description'],
+                    $totalCost,
+                    $projStatus,
+                    $reqData['deadline'],
+                    $reqId
+                ]);
+            }
+        }
+
         $bankDetails = site_setting('payment_bank_details');
         $upiNum = site_setting('payment_upi_number');
         $upiId = site_setting('payment_upi_id');
@@ -82,6 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             );
         } catch (Exception $e) {}
     }
+    
+    $_SESSION['success_message'] = "Bake request updated successfully and client notified.";
+    header("Location: bake_requests.php" . (isset($_GET['archive']) && $_GET['archive'] == 1 ? "?archive=1" : ""));
+    exit;
 }
 
 // Handle status updates from links
@@ -91,13 +124,37 @@ if (isset($_GET['status']) && isset($_GET['id'])) {
     $allowed = ['Pending','Accepted','Rejected','Approved','Completed'];
     if (in_array($status, $allowed)) {
         $pdo->prepare("UPDATE bake_requests SET status=? WHERE id=?")->execute([$status, $reqId]);
-        $success = "Request status updated to " . $status;
-
+        
         // Auto email client on status update link
         $reqDetails = $pdo->prepare("SELECT br.*, u.full_name, u.email FROM bake_requests br JOIN users_public u ON br.user_id = u.id WHERE br.id = ?");
         $reqDetails->execute([$reqId]);
         $reqData = $reqDetails->fetch();
         if ($reqData) {
+            // Automatically sync to projects table
+            if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
+                $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
+                $chkProj->execute([$reqId]);
+                if (!$chkProj->fetchColumn()) {
+                    $projStatus = 'Pending';
+                    if ($status === 'Completed') {
+                        $projStatus = 'Completed';
+                    } else if ($status === 'Approved' || $status === 'Accepted') {
+                        $projStatus = 'Ongoing';
+                    }
+                    
+                    $insProj = $pdo->prepare("INSERT INTO projects (client_id, title, description, price, paid_amount, status, due_date, bake_request_id) VALUES (?, ?, ?, ?, 0.00, ?, ?, ?)");
+                    $insProj->execute([
+                        $reqData['user_id'],
+                        $reqData['service_type'],
+                        $reqData['project_description'],
+                        $reqData['total_cost'] ?: $reqData['estimated_price_inr'],
+                        $projStatus,
+                        $reqData['deadline'],
+                        $reqId
+                    ]);
+                }
+            }
+
             $formattedCost = $currencySymbol . number_format($reqData['total_cost'], 2);
             $payInfo = [
                 'bank'       => site_setting('payment_bank_details'),
@@ -110,6 +167,10 @@ if (isset($_GET['status']) && isset($_GET['id'])) {
                 $mailer->sendRequestStatusUpdate($reqData['email'], $reqData['full_name'], $reqData['service_type'], $reqData['status'], $formattedCost, $reqData['admin_notes'], $payInfo);
             } catch (Exception $e) {}
         }
+        
+        $_SESSION['success_message'] = "Request status updated to " . $status . " and client notified.";
+        header("Location: bake_requests.php" . (isset($_GET['archive']) && $_GET['archive'] == 1 ? "?archive=1" : ""));
+        exit;
     }
 }
 
@@ -190,7 +251,6 @@ $adminWA = ADMIN_WA;
                 <th>Requested Deadline</th>
                 <th>Quotation Cost</th>
                 <th>Current Status</th>
-                <th style="text-align: right;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -223,22 +283,9 @@ $adminWA = ADMIN_WA;
                 <td>
                     <span class="status-badge status-<?php echo $req['status']; ?>"><?php echo $req['status']; ?></span>
                 </td>
-                <td style="text-align: right;">
-                    <div class="action-dropdown">
-                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem; border-radius: 6px;">
-                            Quick Status ▾
-                        </button>
-                        <div class="dropdown-menu">
-                            <a href="bake_requests.php?id=<?php echo $req['id']; ?>&status=Accepted<?php echo $showArchive ? '&archive=1' : ''; ?>">✅ Accept</a>
-                            <a href="bake_requests.php?id=<?php echo $req['id']; ?>&status=Approved<?php echo $showArchive ? '&archive=1' : ''; ?>">🎉 Approve</a>
-                            <a href="bake_requests.php?id=<?php echo $req['id']; ?>&status=Rejected<?php echo $showArchive ? '&archive=1' : ''; ?>">❌ Reject</a>
-                            <a href="bake_requests.php?id=<?php echo $req['id']; ?>&status=Completed<?php echo $showArchive ? '&archive=1' : ''; ?>">✔ Complete</a>
-                        </div>
-                    </div>
-                </td>
             </tr>
             <tr style="border-bottom: 2px solid var(--border-medium);">
-                <td colspan="7" style="background:rgba(234, 88, 12, 0.01); padding: 1.5rem; border-radius: 8px;">
+                <td colspan="6" style="background:rgba(234, 88, 12, 0.01); padding: 1.5rem; border-radius: 8px;">
                     <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem;">
                         <div>
                             <strong style="color:var(--text-primary); font-size:0.9rem; display: block; margin-bottom: 0.4rem;">Project Ingredients Brief:</strong>

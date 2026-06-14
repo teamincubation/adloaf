@@ -100,4 +100,91 @@ HTML;
 HTML;
         return $this->send($to, $subject, $html, $toName);
     }
+
+    /**
+     * Send bake request status update notification to user
+     */
+    public function sendRequestStatusUpdate($to, $toName, $service, $status, $cost, $notes, $payInfo) {
+        $subject = "Update on your adloaf Bake Request: {$service} [{$status}]";
+        
+        $statusColors = [
+            'Pending'   => '#ef4444',
+            'Accepted'  => '#f59e0b',
+            'Rejected'  => '#ef4444',
+            'Approved'  => '#10b981',
+            'Completed' => '#10b981',
+        ];
+        $color = $statusColors[$status] ?? '#EA580C';
+        
+        $paymentHtml = '';
+        if (in_array($status, ['Accepted', 'Approved']) && (!empty($payInfo['bank']) || !empty($payInfo['upi_id']) || !empty($payInfo['upi_number']))) {
+            $paymentHtml = <<<HTML
+            <div style="margin-top: 24px; padding: 20px; background: #231B13; border: 1px dashed #EA580C; border-radius: 8px;">
+                <h3 style="color: #FAF7F2; margin-top: 0; font-size: 16px;">Payment details to start proofing:</h3>
+HTML;
+            if (!empty($payInfo['bank'])) {
+                $paymentHtml .= "<p style='color:#C4A882; margin: 4px 0; font-size: 14px;'><strong>Bank Transfer:</strong> " . nl2br(htmlspecialchars($payInfo['bank'])) . "</p>";
+            }
+            if (!empty($payInfo['upi_id'])) {
+                $paymentHtml .= "<p style='color:#C4A882; margin: 4px 0; font-size: 14px;'><strong>UPI ID:</strong> " . htmlspecialchars($payInfo['upi_id']) . "</p>";
+            }
+            if (!empty($payInfo['upi_number'])) {
+                $paymentHtml .= "<p style='color:#C4A882; margin: 4px 0; font-size: 14px;'><strong>UPI Phone:</strong> " . htmlspecialchars($payInfo['upi_number']) . "</p>";
+            }
+            $paymentHtml .= "</div>";
+        }
+
+        $notesHtml = '';
+        if (!empty($notes)) {
+            $notesHtml = <<<HTML
+            <div style="margin-top: 20px; padding: 15px; background: #1C150E; border-left: 4px solid #EA580C; border-radius: 4px; color: #FAF7F2;">
+                <strong style="font-size:14px;">Oven Notes:</strong><br>
+                <span style="color:#C4A882; font-size:14px;">{$notes}</span>
+            </div>
+HTML;
+        }
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background:#0d0a07; margin:0; padding:0;">
+  <div style="max-width:560px; margin:40px auto; background:#1A1309; border-radius:16px; overflow:hidden; border:1px solid #3D2E1E;">
+    <div style="background:linear-gradient(135deg,#EA580C,#D97706); padding:32px; text-align:center;">
+      <h1 style="color:#fff; margin:0; font-size:28px;">adloaf.</h1>
+      <p style="color:rgba(255,255,255,0.8); margin:8px 0 0;">Status Update Notification</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#FAF7F2; margin-top:0;">Your request status is now <span style="color:{$color};">{$status}</span></h2>
+      <p style="color:#C4A882;">Hi {$toName},</p>
+      <p style="color:#C4A882;">Here are the update details for your bake request:</p>
+      
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; width:40%; font-size: 14px;">Service</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$service}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Status</td>
+          <td style="color:{$color}; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$status}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Estimated Cost</td>
+          <td style="color:#EA580C; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$cost}</td>
+        </tr>
+      </table>
+      
+      {$notesHtml}
+      {$paymentHtml}
+      
+      <p style="color:#8B7355; font-size:13px; margin-top:24px;">If you have any questions, feel free to reply directly to this email or chat with us on WhatsApp.</p>
+      <hr style="border:1px solid #3D2E1E; margin:24px 0;">
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. Freshly Baked Design Ideas.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+        return $this->send($to, $subject, $html, $toName);
+    }
 }
