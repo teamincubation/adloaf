@@ -120,9 +120,11 @@ try {
 
 <style>
     .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-    .status-Pending { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    .status-Ongoing { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .status-Completed { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-Pending   { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .status-Accepted  { background:rgba(245,158,11,0.15); color:#f59e0b; }
+    .status-Approved  { background:rgba(16,185,129,0.15); color:#10b981; }
+    .status-Rejected  { background:rgba(107,114,128,0.15); color:#9ca3af; }
+    .status-Completed { background:rgba(99,102,241,0.15); color:#818cf8; }
 </style>
 
 <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-bottom: 2rem;">
@@ -218,8 +220,10 @@ try {
                         <label class="form-label">Status</label>
                         <select name="status" class="form-input" style="height: 53px;">
                             <option value="Pending" <?php echo ($editProject && $editProject['status'] == 'Pending') ? 'selected' : ''; ?>>Pending</option>
-                            <option value="Ongoing" <?php echo ($editProject && $editProject['status'] == 'Ongoing') ? 'selected' : ''; ?>>Ongoing</option>
+                            <option value="Accepted" <?php echo ($editProject && $editProject['status'] == 'Accepted') ? 'selected' : ''; ?>>Accepted</option>
+                            <option value="Approved" <?php echo ($editProject && $editProject['status'] == 'Approved') ? 'selected' : ''; ?>>Approved</option>
                             <option value="Completed" <?php echo ($editProject && $editProject['status'] == 'Completed') ? 'selected' : ''; ?>>Completed</option>
+                            <option value="Rejected" <?php echo ($editProject && $editProject['status'] == 'Rejected') ? 'selected' : ''; ?>>Rejected</option>
                         </select>
                     </div>
                     <div class="form-group">

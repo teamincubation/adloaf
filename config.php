@@ -108,6 +108,12 @@ try {
         $pdo->exec("ALTER TABLE projects ADD CONSTRAINT fk_projects_users FOREIGN KEY (client_id) REFERENCES users_public(id) ON DELETE CASCADE");
     } catch (PDOException $e) {}
 
+    // Ensure projects status ENUM aligns with bake_requests (Pending, Accepted, Rejected, Approved, Completed)
+    try {
+        $pdo->exec("UPDATE projects SET status = 'Approved' WHERE status = 'Ongoing'");
+        $pdo->exec("ALTER TABLE projects MODIFY COLUMN status ENUM('Pending', 'Accepted', 'Rejected', 'Approved', 'Completed') DEFAULT 'Pending'");
+    } catch (PDOException $e) {}
+
 
 } catch (PDOException $e) {
     die("Database connection failed: " . $e->getMessage());

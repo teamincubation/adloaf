@@ -110,13 +110,21 @@ $next = $_GET['next'] ?? '../bake.php';
           // Check if Google Client ID is configured
           $googleClientId = site_setting('google_client_id');
           if ($googleClientId) {
-              $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-              $host = $_SERVER['HTTP_HOST'];
-              $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-              if (strpos($dir, '/auth') === false) {
-                  $dir = rtrim($dir, '/') . '/auth';
+              $siteUrlHost = parse_url(SITE_URL, PHP_URL_HOST);
+              $currentHost = $_SERVER['HTTP_HOST'];
+              $cleanSiteHost = preg_replace('/^www\./i', '', $siteUrlHost);
+              $cleanCurrentHost = preg_replace('/^www\./i', '', $currentHost);
+              
+              if ($cleanSiteHost === $cleanCurrentHost) {
+                  $redirectUri = SITE_URL . '/auth/google-callback.php';
+              } else {
+                  $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+                  $dir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+                  if (strpos($dir, '/auth') === false) {
+                      $dir = rtrim($dir, '/') . '/auth';
+                  }
+                  $redirectUri = $scheme . '://' . $currentHost . $dir . '/google-callback.php';
               }
-              $redirectUri = $scheme . '://' . $host . $dir . '/google-callback.php';
               
               $googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
                   'response_type' => 'code',

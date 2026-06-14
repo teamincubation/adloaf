@@ -59,25 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $reqData = $reqDetails->fetch();
 
     if ($reqData) {
-        // Automatically sync Accepted/Approved/Completed requests to projects table
-        if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
-            $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
-            $chkProj->execute([$reqId]);
-            if (!$chkProj->fetchColumn()) {
-                $projStatus = 'Pending';
-                if ($status === 'Completed') {
-                    $projStatus = 'Completed';
-                } else if ($status === 'Approved' || $status === 'Accepted') {
-                    $projStatus = 'Ongoing';
-                }
-                
+        // Automatically sync Accepted/Approved/Completed/Rejected requests to projects table
+        $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
+        $chkProj->execute([$reqId]);
+        $projId = $chkProj->fetchColumn();
+        
+        if ($projId) {
+            $updProj = $pdo->prepare("UPDATE projects SET status = ?, price = ? WHERE id = ?");
+            $updProj->execute([$status, $totalCost, $projId]);
+        } else {
+            if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
                 $insProj = $pdo->prepare("INSERT INTO projects (client_id, title, description, price, paid_amount, status, due_date, bake_request_id) VALUES (?, ?, ?, ?, 0.00, ?, ?, ?)");
                 $insProj->execute([
                     $reqData['user_id'],
                     $reqData['service_type'],
                     $reqData['project_description'],
                     $totalCost,
-                    $projStatus,
+                    $status,
                     $reqData['deadline'],
                     $reqId
                 ]);
@@ -131,24 +129,24 @@ if (isset($_GET['status']) && isset($_GET['id'])) {
         $reqData = $reqDetails->fetch();
         if ($reqData) {
             // Automatically sync to projects table
-            if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
-                $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
-                $chkProj->execute([$reqId]);
-                if (!$chkProj->fetchColumn()) {
-                    $projStatus = 'Pending';
-                    if ($status === 'Completed') {
-                        $projStatus = 'Completed';
-                    } else if ($status === 'Approved' || $status === 'Accepted') {
-                        $projStatus = 'Ongoing';
-                    }
-                    
+            $chkProj = $pdo->prepare("SELECT id FROM projects WHERE bake_request_id = ?");
+            $chkProj->execute([$reqId]);
+            $projId = $chkProj->fetchColumn();
+            
+            $currentCost = $reqData['total_cost'] ?: $reqData['estimated_price_inr'];
+            
+            if ($projId) {
+                $updProj = $pdo->prepare("UPDATE projects SET status = ?, price = ? WHERE id = ?");
+                $updProj->execute([$status, $currentCost, $projId]);
+            } else {
+                if (in_array($status, ['Accepted', 'Approved', 'Completed'])) {
                     $insProj = $pdo->prepare("INSERT INTO projects (client_id, title, description, price, paid_amount, status, due_date, bake_request_id) VALUES (?, ?, ?, ?, 0.00, ?, ?, ?)");
                     $insProj->execute([
                         $reqData['user_id'],
                         $reqData['service_type'],
                         $reqData['project_description'],
-                        $reqData['total_cost'] ?: $reqData['estimated_price_inr'],
-                        $projStatus,
+                        $currentCost,
+                        $status,
                         $reqData['deadline'],
                         $reqId
                     ]);

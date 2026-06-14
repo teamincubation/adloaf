@@ -4,30 +4,48 @@ require_once 'header.php';
 // Calculate Analytics
 try {
     // 1. Total number of clients
-    $clientsQuery = $pdo->query("SELECT COUNT(*) as count FROM clients");
-    $totalClients = $clientsQuery->fetch()['count'];
+    $clientsQuery = $pdo->query("SELECT COUNT(*) as count FROM users_public");
+    $totalClients = $clientsQuery->fetch()['count'] ?? 0;
 
     // 2. Project counts by status
     $projectsQuery = $pdo->query("SELECT status, COUNT(*) as count FROM projects GROUP BY status");
     $projectStats = $projectsQuery->fetchAll(PDO::FETCH_KEY_PAIR);
     
-    $pendingTasks = $projectStats['Pending'] ?? 0;
-    $ongoingWorks = $projectStats['Ongoing'] ?? 0;
-    $completedWorks = $projectStats['Completed'] ?? 0;
+    // 3. Standalone request counts by status (excluding requests already synced to projects)
+    $reqQuery = $pdo->query("
+        SELECT status, COUNT(*) as count 
+        FROM bake_requests 
+        WHERE id NOT IN (SELECT DISTINCT bake_request_id FROM projects WHERE bake_request_id IS NOT NULL) 
+        GROUP BY status
+    ");
+    $reqStats = $reqQuery->fetchAll(PDO::FETCH_KEY_PAIR);
+    
+    // Combine metrics
+    $pendingTasks = ($projectStats['Pending'] ?? 0) + ($reqStats['Pending'] ?? 0);
+    $ongoingWorks = ($projectStats['Accepted'] ?? 0) + ($projectStats['Approved'] ?? 0) + ($reqStats['Accepted'] ?? 0) + ($reqStats['Approved'] ?? 0);
+    $completedWorks = ($projectStats['Completed'] ?? 0) + ($reqStats['Completed'] ?? 0);
 
-    // 3. Financials
+    // 4. Financials
     $financeQuery = $pdo->query("SELECT SUM(price) as total_price, SUM(paid_amount) as total_paid FROM projects");
     $financeData = $financeQuery->fetch();
+    $totalRevenue = $financeData['total_paid'] ?? 0.00;
     
-    $totalRevenue = $financeData['total_paid'] ?? 0;
-    $pendingPayment = ($financeData['total_price'] ?? 0) - $totalRevenue;
+    // Standalone approved/accepted requests outstanding cost
+    $reqOutstanding = $pdo->query("
+        SELECT SUM(total_cost) 
+        FROM bake_requests 
+        WHERE status IN ('Accepted', 'Approved') 
+          AND id NOT IN (SELECT DISTINCT bake_request_id FROM projects WHERE bake_request_id IS NOT NULL)
+    ")->fetchColumn() ?: 0.00;
+    
+    $pendingPayment = (($financeData['total_price'] ?? 0.00) - $totalRevenue) + $reqOutstanding;
 
     // Fetch 5 most recent active projects
     $recentProjectsQuery = $pdo->query("
-        SELECT p.*, c.name as client_name 
+        SELECT p.*, c.full_name as client_name 
         FROM projects p 
-        JOIN clients c ON p.client_id = c.id 
-        WHERE p.status != 'Completed'
+        JOIN users_public c ON p.client_id = c.id 
+        WHERE p.status != 'Completed' AND p.status != 'Rejected'
         ORDER BY p.due_date ASC, p.created_at DESC 
         LIMIT 5
     ");
@@ -38,7 +56,7 @@ try {
     $totalClients = $pendingTasks = $ongoingWorks = $completedWorks = 0;
     $totalRevenue = $pendingPayment = 0;
     $recentProjects = [];
-    $error = "Please run admin_upgrades.sql in your database to enable the Dashboard.";
+    $error = "Please run database upgrades to enable the Dashboard.";
 }
 ?>
 
@@ -89,9 +107,11 @@ try {
         font-size: 0.8rem;
         font-weight: bold;
     }
-    .status-Pending { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-    .status-Ongoing { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .status-Completed { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .status-Pending   { background:rgba(239,68,68,0.15); color:#ef4444; }
+    .status-Accepted  { background:rgba(245,158,11,0.15); color:#f59e0b; }
+    .status-Approved  { background:rgba(16,185,129,0.15); color:#10b981; }
+    .status-Rejected  { background:rgba(107,114,128,0.15); color:#9ca3af; }
+    .status-Completed { background:rgba(99,102,241,0.15); color:#818cf8; }
 </style>
 
 <div class="kpi-grid">
