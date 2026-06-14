@@ -3,14 +3,7 @@ require_once __DIR__ . '/lib/helpers.php';
 
 header('Content-Type: text/plain');
 
-echo "=== Testing Gemini API Connection with thinkingBudget = 0 ===\n\n";
-
 $apiKey = GEMINI_API_KEY;
-
-// Test 2: Market Analysis
-echo "--- Test 2: Market Analysis ---\n";
-$t2_start = microtime(true);
-
 $service = "Web Development";
 $desc = "Create a modern portfolio website for a design agency.";
 
@@ -42,7 +35,7 @@ $payload = json_encode([
     'contents' => [['parts' => [['text' => $prompt]]]],
     'generationConfig' => [
         'temperature' => 0.2, 
-        'maxOutputTokens' => 2000,
+        'maxOutputTokens' => 1000,
         'responseMimeType' => 'application/json',
         'thinkingConfig' => [
             'thinkingBudget' => 0
@@ -61,28 +54,22 @@ $ctx = stream_context_create([
 ]);
 
 $res = file_get_contents($url, false, $ctx);
-$t2_end = microtime(true);
-echo "Time Taken: " . round($t2_end - $t2_start, 2) . "s\n";
-echo "HTTP Response Headers:\n";
-print_r($http_response_header);
-echo "\nResponse Body:\n";
 if ($res) {
-    echo $res . "\n";
     $json = json_decode($res, true);
-    if (isset($json['candidates'][0]['content']['parts'][0]['text'])) {
-        $text = $json['candidates'][0]['content']['parts'][0]['text'];
-        echo "Extracted Text:\n" . $text . "\n\n";
-        $parsed = json_decode($text, true);
-        if ($parsed) {
-            echo "Successfully Parsed JSON!\n";
-            print_r($parsed);
-        } else {
-            echo "JSON Parsing of extracted text FAILED. Last error: " . json_last_error_msg() . "\n";
-        }
-    } else {
-        echo "No text candidate found in the response.\n";
+    echo "=== API Metadata ===\n";
+    echo "Model Version: " . ($json['modelVersion'] ?? 'unknown') . "\n";
+    if (isset($json['candidates'][0])) {
+        $cand = $json['candidates'][0];
+        echo "Finish Reason: " . ($cand['finishReason'] ?? 'none') . "\n";
+        echo "Text Content Length: " . (isset($cand['content']['parts'][0]['text']) ? strlen($cand['content']['parts'][0]['text']) : 0) . " chars\n";
     }
+    if (isset($json['usageMetadata'])) {
+        echo "Usage Metadata:\n";
+        print_r($json['usageMetadata']);
+    }
+    echo "\n=== Raw Extracted Text ===\n";
+    echo ($json['candidates'][0]['content']['parts'][0]['text'] ?? 'NONE') . "\n";
 } else {
-    echo "FAILED to fetch response body (file_get_contents returned false).\n";
+    echo "Request failed.\n";
 }
 ?>
