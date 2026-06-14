@@ -48,7 +48,14 @@ $siteStats = [
   <title>Adloaf | Freshly Baked Creative Ideas for Brands</title>
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+  <style>
+    @media (min-width: 992px) {
+      .mobile-only {
+        display: none !important;
+      }
+    }
+  </style>
   
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="adloaf_logo.svg">

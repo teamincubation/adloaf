@@ -65,7 +65,7 @@ $next = $_GET['next'] ?? '../bake.php';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up | Adloaf</title>
-  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../style.css?v=<?php echo filemtime('../style.css'); ?>">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
@@ -82,7 +82,7 @@ $next = $_GET['next'] ?? '../bake.php';
             <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+        <span class="logo-text">adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
       </a>
       
       <div class="auth-sidebar-content">
@@ -91,7 +91,7 @@ $next = $_GET['next'] ?? '../bake.php';
       </div>
       
       <div class="auth-sidebar-footer">
-        &copy; 2026 Adloaf Creative. Freshly baked design assets.
+        &copy; 2026 adloaf Creative. Freshly baked design assets.
       </div>
     </div>
 

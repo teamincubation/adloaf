@@ -24,9 +24,17 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
         $clientSecret = site_setting('google_client_secret');
         $code = $_GET['code'];
         
-        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-        $host = $_SERVER['HTTP_HOST'];
-        $redirectUri = $scheme . '://' . $host . '/auth/google-callback.php';
+        $siteUrlHost = parse_url(SITE_URL, PHP_URL_HOST);
+        $currentHost = $_SERVER['HTTP_HOST'];
+        $cleanSiteHost = preg_replace('/^www\./i', '', $siteUrlHost);
+        $cleanCurrentHost = preg_replace('/^www\./i', '', $currentHost);
+        
+        if ($cleanSiteHost === $cleanCurrentHost) {
+            $redirectUri = SITE_URL . '/auth/google-callback.php';
+        } else {
+            $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+            $redirectUri = $scheme . '://' . $currentHost . '/auth/google-callback.php';
+        }
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://oauth2.googleapis.com/token');
@@ -40,7 +48,9 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
         ]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $response = curl_exec($ch);
+        $curl_err = curl_error($ch);
         curl_close($ch);
         
         $tokenData = json_decode($response, true);
@@ -53,13 +63,30 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             $userInfoResponse = curl_exec($ch);
+            $user_curl_err = curl_error($ch);
             curl_close($ch);
             
             $userInfo = json_decode($userInfoResponse, true);
             $email = strtolower(trim($userInfo['email'] ?? ''));
             $fullName = trim($userInfo['name'] ?? '');
             $photo = $userInfo['picture'] ?? '';
+            
+            if (empty($email)) {
+                $err_msg = "Google user email could not be retrieved. UserInfo Response: " . htmlspecialchars($userInfoResponse);
+                if ($user_curl_err) $err_msg .= " cURL Error: " . htmlspecialchars($user_curl_err);
+                die($err_msg);
+            }
+        } else {
+            $err_msg = "Google token exchange failed. Please make sure Google Client ID and Secret are configured correctly, and the redirect URI matches the Authorized redirect URIs in Google Developer Console (configured redirect URI: " . htmlspecialchars($redirectUri) . ").";
+            if ($curl_err) {
+                $err_msg .= " cURL Error: " . htmlspecialchars($curl_err);
+            }
+            if ($response) {
+                $err_msg .= " Response from Google: " . htmlspecialchars($response);
+            }
+            die($err_msg);
         }
     }
     
@@ -101,7 +128,7 @@ if ($mock) {
     <head>
       <meta charset="UTF-8">
       <title>Google Sign-In Simulator | adloaf</title>
-      <link rel="stylesheet" href="../style.css">
+      <link rel="stylesheet" href="../style.css?v=<?php echo filemtime('../style.css'); ?>">
       <style>
         body { display:flex; align-items:center; justify-content:center; min-height:100vh; background: var(--bg-primary); font-family: 'Plus Jakarta Sans', sans-serif; }
         .sim-card { background:#fff; border: 1.5px solid var(--border-medium); border-radius:var(--radius-md); padding:2.5rem; max-width:420px; width:100%; box-shadow: var(--shadow-lg); text-align:center; }

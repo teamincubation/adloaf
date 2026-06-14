@@ -49,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adloaf Admin Login</title>
-    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../style.css?v=<?php echo filemtime('../style.css'); ?>">
+    <link rel="icon" type="image/svg+xml" href="../adloaf_logo.svg">
     <style>
         body {
             display: flex;
@@ -106,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <path d="M7 10.5C7 8 9 6.5 12 6.5C15 6.5 17 8 17 10.5" stroke-dasharray="1 1"/>
                 <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
             </svg>
-            <span class="logo-text">Adloaf<span class="logo-dot">.</span> Admin</span>
+            <span class="logo-text">adloaf<span class="logo-dot">.</span> Admin</span>
         </div>
         
         <h2 class="login-title">Bakery Access</h2>

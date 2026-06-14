@@ -42,7 +42,7 @@ $next = $_GET['next'] ?? '../bake.php';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In | Adloaf</title>
-  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../style.css?v=<?php echo filemtime('../style.css'); ?>">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
@@ -71,25 +71,25 @@ $next = $_GET['next'] ?? '../bake.php';
         &copy; 2026 adloaf Creative. Freshly baked design assets.
       </div>
     </div>
-
+ 
     <div class="auth-form-pane">
       <div class="auth-form-inner">
         <h1 class="auth-title" style="margin-bottom: 0.5rem;">Welcome Back</h1>
         <p class="auth-subtitle" style="margin-bottom: 2rem;">Sign in to manage your bake requests.</p>
-
+ 
         <?php if ($error): ?>
           <div class="form-error"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
-
+ 
         <form method="POST" action="">
           <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
           <input type="hidden" name="next" value="<?php echo htmlspecialchars($next); ?>">
-
+ 
           <div class="form-group">
             <label class="form-label">Email Address</label>
             <input type="email" name="email" class="form-input" placeholder="you@example.com" required autofocus style="height: 52px;">
           </div>
-
+ 
           <div class="form-group">
             <label class="form-label">Password</label>
             <input type="password" name="password" class="form-input" placeholder="Your password" required style="height: 52px;">
@@ -98,21 +98,30 @@ $next = $_GET['next'] ?? '../bake.php';
           <div class="forgot-link" style="text-align: right; margin-top: -0.25rem; margin-bottom: 1.5rem;">
             <a href="forgot_password.php" style="color: var(--text-secondary); font-size: 0.88rem; font-weight: 600;">Forgot password?</a>
           </div>
-
+ 
           <button type="submit" class="btn btn-primary" style="width:100%; padding:0.95rem; font-size: 1rem;">Sign In</button>
           
           <div style="text-align: center; margin: 1.5rem 0; position: relative;">
             <hr style="border: 0; border-top: 1px solid var(--border-medium); margin: 0;">
             <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-primary); padding: 0 0.75rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">or</span>
           </div>
-
+ 
           <?php
           // Check if Google Client ID is configured
           $googleClientId = site_setting('google_client_id');
           if ($googleClientId) {
-              $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
-              $host = $_SERVER['HTTP_HOST'];
-              $redirectUri = $scheme . '://' . $host . '/auth/google-callback.php';
+              $siteUrlHost = parse_url(SITE_URL, PHP_URL_HOST);
+              $currentHost = $_SERVER['HTTP_HOST'];
+              $cleanSiteHost = preg_replace('/^www\./i', '', $siteUrlHost);
+              $cleanCurrentHost = preg_replace('/^www\./i', '', $currentHost);
+              
+              if ($cleanSiteHost === $cleanCurrentHost) {
+                  $redirectUri = SITE_URL . '/auth/google-callback.php';
+              } else {
+                  $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+                  $redirectUri = $scheme . '://' . $currentHost . '/auth/google-callback.php';
+              }
+              
               $googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
                   'response_type' => 'code',
                   'client_id'     => $googleClientId,

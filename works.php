@@ -13,7 +13,14 @@ $categories = array_unique(array_column($portfolio, 'category'));
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Our Works | Adloaf</title>
   <meta name="description" content="Explore Adloaf's portfolio — websites, branding, posters, social media creatives, and UI concepts.">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=<?php echo filemtime('style.css'); ?>">
+  <style>
+    @media (min-width: 992px) {
+      .mobile-only {
+        display: none !important;
+      }
+    }
+  </style>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
