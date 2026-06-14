@@ -187,4 +187,62 @@ HTML;
 HTML;
         return $this->send($to, $subject, $html, $toName);
     }
+
+    /**
+     * Send bake request notification to admin
+     */
+    public function sendAdminNotification($service, $clientName, $clientEmail, $deadline, $description) {
+        $subject = "🚨 Urgent: New Bake Request Placed! [{$service}]";
+        $adminLoginLink = SITE_URL . "/admin/bake_requests.php";
+        $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background:#0d0a07; margin:0; padding:0;">
+  <div style="max-width:560px; margin:40px auto; background:#1A1309; border-radius:16px; overflow:hidden; border:1px solid #3D2E1E;">
+    <div style="background:linear-gradient(135deg,#ef4444,#ea580c); padding:32px; text-align:center;">
+      <h1 style="color:#fff; margin:0; font-size:28px;">adloaf. admin</h1>
+      <p style="color:rgba(255,255,255,0.8); margin:8px 0 0;">New Project Request Notification</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#FAF7F2; margin-top:0;">Urgent Bake Request Received 🔥</h2>
+      <p style="color:#C4A882;">A client has submitted a new project request. Review the details below:</p>
+      
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; width:40%; font-size: 14px;">Client Name</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$clientName}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Client Email</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;"><a href="mailto:{$clientEmail}" style="color:#EA580C;">{$clientEmail}</a></td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Service</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$service}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Deadline</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$deadline}</td>
+        </tr>
+      </table>
+      
+      <div style="margin-top: 20px; padding: 15px; background: #1C150E; border-left: 4px solid #ef4444; border-radius: 4px; color: #FAF7F2;">
+        <strong style="font-size:14px;">Project Description:</strong><br>
+        <span style="color:#C4A882; font-size:14px;">{$description}</span>
+      </div>
+      
+      <div style="text-align:center; margin:32px 0;">
+        <a href="{$adminLoginLink}" style="background: linear-gradient(135deg, #ef4444, #EA580C); color:#fff; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; display:inline-block;">Manage Request in Admin Panel</a>
+      </div>
+      
+      <hr style="border:1px solid #3D2E1E; margin:24px 0;">
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. Admin Notifications.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+        return $this->send('developers@adloaf.com', $subject, $html, 'Adloaf Developers');
+    }
 }

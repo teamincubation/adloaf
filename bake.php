@@ -229,6 +229,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             try {
                 $mailer = new Mailer();
                 $mailer->sendBakeConfirmation($user['email'], $user['full_name'], $data['service_type'], $data['deadline']);
+                $mailer->sendAdminNotification($data['service_type'], $user['full_name'], $user['email'], $data['deadline'], $data['project_description']);
             } catch(Exception $e) {}
 
             unset($_SESSION['bake_draft']);
@@ -630,13 +631,50 @@ menuToggle.addEventListener('click', () => {
 const exchangeRates = { INR:1, USD:0.012, EUR:0.011, GBP:0.0094, AED:0.044, SAR:0.045, MYR:0.056 };
 const currencySymbols = { INR:'₹', USD:'$', EUR:'€', GBP:'£', AED:'د.إ', SAR:'﷼', MYR:'RM' };
 
+function updateDeadlineMinDate() {
+  const service = document.getElementById('service-select').value.toLowerCase();
+  const deadlineInput = document.getElementById('deadline-input');
+  if (!deadlineInput) return;
+  
+  let offsetDays = 4; // default
+  if (service.includes('website design')) {
+    offsetDays = 21; // 3 weeks
+  } else if (service.includes('landing page')) {
+    offsetDays = 14; // 2 weeks
+  } else if (service.includes('graphic design')) {
+    offsetDays = 4;  // 4 days
+  } else if (service.includes('brand identity')) {
+    offsetDays = 7;  // 1 week
+  } else if (service.includes('social media creatives')) {
+    offsetDays = 1;  // 1 day
+  } else if (service.includes('digital campaign') || service.includes('digital marketing') || service.includes('digita campaign')) {
+    offsetDays = 15; // 15 days
+  }
+  
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() + offsetDays);
+  
+  const yyyy = targetDate.getFullYear();
+  const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const dd = String(targetDate.getDate()).padStart(2, '0');
+  const minDateStr = `${yyyy}-${mm}-${dd}`;
+  
+  deadlineInput.min = minDateStr;
+  
+  if (deadlineInput.value && deadlineInput.value < minDateStr) {
+    deadlineInput.value = minDateStr;
+  }
+  updateStepProgress();
+}
+
 // Language field toggle
 const languageServices = ['Graphic Design','Brand Identity','Social Media Creatives'];
 document.getElementById('service-select').addEventListener('change', function() {
   const lg = document.getElementById('language-group');
   if (lg) {
-    lg.style.display = languageServices.includes(this.value) ? 'block' : 'none';
+    lg.style.display = languageServices.some(s => this.value.toLowerCase().includes(s.toLowerCase())) ? 'block' : 'none';
   }
+  updateDeadlineMinDate();
 });
 
 function updateStepProgress() {
@@ -949,6 +987,37 @@ async function cleanupTempFilesSilently() {
   }
 }
 
+function runFallbackMarketAnalysis(serviceName) {
+  const sel = document.getElementById('service-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt) return;
+  
+  const adloafPrice = parseFloat(opt.dataset.price || 0);
+  let marketPrice = parseFloat(opt.dataset.market || 0);
+  if (marketPrice === 0) {
+    marketPrice = Math.round(adloafPrice * 1.4); // fallback 40% higher
+  }
+  
+  const breakdown = [
+    { item: "Design Brief & Concept Strategy", price: Math.round(marketPrice * 0.25) },
+    { item: "UI UX Design & Graphics Assets", price: Math.round(marketPrice * 0.35) },
+    { item: "Implementation & Production Development", price: Math.round(marketPrice * 0.40) }
+  ];
+  
+  lastMarketAnalysis = {
+    market_price: marketPrice,
+    adloaf_price: adloafPrice,
+    breakdown: breakdown,
+    analysis: `Standard design agencies charge high markups due to large agency overheads, heavy management layers, and retail office rents. Adloaf operates as a digital creative kitchen, offering the same high-quality visual results at direct baker-to-table pricing.`
+  };
+  
+  updateMarketAnalysisPricing();
+  const analysisCard = document.getElementById('market-analysis-card');
+  if (analysisCard) {
+    analysisCard.style.display = 'block';
+  }
+}
+
 async function runMarketAnalysis() {
   const service = document.getElementById('service-select').value;
   const desc    = document.getElementById('description-textarea').value;
@@ -986,14 +1055,14 @@ async function runMarketAnalysis() {
     });
     const data = await resp.json();
     if (data.error) {
-      displayError('Market Analysis Error: ' + data.error);
+      runFallbackMarketAnalysis(service);
     } else if (data.market_price) {
       lastMarketAnalysis = data;
       updateMarketAnalysisPricing();
       if (analysisCard) analysisCard.style.display = 'block';
     }
   } catch (e) {
-    displayError('Failed to run market value analysis. Please try again.');
+    runFallbackMarketAnalysis(service);
   } finally {
     if (loadingDiv) loadingDiv.style.display = 'none';
     if (runBtn) runBtn.disabled = false;
