@@ -45,6 +45,21 @@ try {
         $pdo->exec("ALTER TABLE bake_requests ADD COLUMN total_cost DECIMAL(10,2) DEFAULT 0.00");
     } catch (PDOException $e) {}
     try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS invoices (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            project_id INT NOT NULL,
+            invoice_number VARCHAR(100) UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            paid_amount DECIMAL(10,2) DEFAULT 0.00,
+            status VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+        )");
+    } catch (PDOException $e) {}
+    try {
+        $pdo->exec("INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES ('payment_upi_link', 'upi://pay?pa=adnanmongam@ybl&pn=Adnan%20Vellicheri')");
+    } catch (PDOException $e) {}
+    try {
         $sVal = $pdo->query("SELECT setting_value FROM site_settings WHERE setting_key = 'gemini_api_key'")->fetchColumn();
         if (!$sVal || strpos($sVal, 'AIzaSy') === 0) {
             $dec = base64_decode('QVEuQWI4Uk42SkN0X1UxQW1QY2h4NTgxQjNsUC1jVHBtWm5xSnQxamlVZWFHZWtWNkpTZWc=');

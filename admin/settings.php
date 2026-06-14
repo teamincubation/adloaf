@@ -103,6 +103,10 @@ function gs($key, $settings) {
         </div>
     </div>
     <div class="form-group" style="margin-top: 1rem;">
+        <label class="form-label">UPI Payment Link (upi://)</label>
+        <input type="text" name="payment_upi_link" class="form-input" value="<?php echo gs('payment_upi_link', $settings); ?>" placeholder="e.g. upi://pay?pa=adloaf@upi&pn=adLoaf">
+    </div>
+    <div class="form-group" style="margin-top: 1rem;">
         <label class="form-label">Payment QR Code Image</label>
         <input type="file" name="payment_qr" class="form-input" style="padding: 0.5rem; height: auto;">
         <?php if (!empty($settings['payment_qr'])): ?>

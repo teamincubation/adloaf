@@ -247,4 +247,56 @@ HTML;
         $r2 = $this->send('adnanmongam@gmail.com', $subject, $html, 'Adnan Mongam');
         return $r1 || $r2;
     }
+
+    /**
+     * Send formatted invoice to client with Pay Now link
+     */
+    public function sendInvoice($to, $toName, $invoiceNumber, $service, $total, $requested, $balance, $payLink) {
+        $subject = "Invoice from Adloaf: {$invoiceNumber} [{$service}]";
+        $currencySym = site_setting('base_currency_symbol', '₹');
+        
+        $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background:#0d0a07; margin:0; padding:0;">
+  <div style="max-width:560px; margin:40px auto; background:#1A1309; border-radius:16px; overflow:hidden; border:1px solid #3D2E1E;">
+    <div style="background:linear-gradient(135deg,#EA580C,#D97706); padding:32px; text-align:center;">
+      <h1 style="color:#fff; margin:0; font-size:28px;">adloaf.</h1>
+      <p style="color:rgba(255,255,255,0.8); margin:8px 0 0;">Project Invoice Details</p>
+    </div>
+    <div style="padding:32px;">
+      <h2 style="color:#FAF7F2; margin-top:0;">Invoice Reference: {$invoiceNumber}</h2>
+      <p style="color:#C4A882;">Hi {$toName},</p>
+      <p style="color:#C4A882;">Please find the payment request details for your project <strong>{$service}</strong> below:</p>
+      
+      <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; width:50%; font-size: 14px;">Total Project Cost</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$currencySym}{$total}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Amount Requested</td>
+          <td style="color:#EA580C; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$currencySym}{$requested}</td>
+        </tr>
+        <tr>
+          <td style="color:#8B7355; padding:8px 0; border-bottom:1px solid #3D2E1E; font-size: 14px;">Remaining Balance Due</td>
+          <td style="color:#FAF7F2; padding:8px 0; border-bottom:1px solid #3D2E1E; font-weight:700; font-size: 14px;">{$currencySym}{$balance}</td>
+        </tr>
+      </table>
+      
+      <div style="text-align:center; margin:32px 0;">
+        <a href="{$payLink}" style="background: linear-gradient(135deg, #EA580C, #D97706); color:#fff; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; display:inline-block;">Pay Now via UPI</a>
+      </div>
+      
+      <p style="color:#8B7355; font-size:13px; margin-top:24px;">Click the button above to view your printable invoice and complete your payment via UPI immediately.</p>
+      <hr style="border:1px solid #3D2E1E; margin:24px 0;">
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+HTML;
+        return $this->send($to, $subject, $html, $toName);
+    }
 }
