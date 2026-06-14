@@ -1,10 +1,6 @@
 <?php
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../config.php';
-
-// Check if admin is logged in
-if (empty($_SESSION['admin_logged_in'])) {
-    die("Access denied. Please log in as admin.");
-}
 
 $invoiceId = intval($_GET['id'] ?? 0);
 if (!$invoiceId) {
