@@ -44,6 +44,9 @@ $next = $_GET['next'] ?? '../bake.php';
   <title>Sign In | Adloaf</title>
   <link rel="stylesheet" href="../style.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link class="fav-icon" rel="icon" type="image/svg+xml" href="../adloaf_logo.svg">
 </head>
 <body>
   <div class="auth-split-layout">
@@ -107,10 +110,13 @@ $next = $_GET['next'] ?? '../bake.php';
           // Check if Google Client ID is configured
           $googleClientId = site_setting('google_client_id');
           if ($googleClientId) {
+              $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+              $host = $_SERVER['HTTP_HOST'];
+              $redirectUri = $scheme . '://' . $host . '/auth/google-callback.php';
               $googleUrl = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
                   'response_type' => 'code',
                   'client_id'     => $googleClientId,
-                  'redirect_uri'  => SITE_URL . '/auth/google-callback.php',
+                  'redirect_uri'  => $redirectUri,
                   'scope'         => 'openid email profile',
                   'state'         => $next
               ]);

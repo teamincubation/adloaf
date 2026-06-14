@@ -23,7 +23,10 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
         $clientId = site_setting('google_client_id');
         $clientSecret = site_setting('google_client_secret');
         $code = $_GET['code'];
-        $redirectUri = SITE_URL . '/auth/google-callback.php';
+        
+        $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $redirectUri = $scheme . '://' . $host . '/auth/google-callback.php';
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, 'https://oauth2.googleapis.com/token');
@@ -36,6 +39,7 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
             'grant_type'    => 'authorization_code'
         ]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         $response = curl_exec($ch);
         curl_close($ch);
         
@@ -48,6 +52,7 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
                 'Authorization: Bearer ' . $tokenData['access_token']
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $userInfoResponse = curl_exec($ch);
             curl_close($ch);
             
