@@ -12,25 +12,156 @@ $submitted = false;
 // Restore draft if logged in and draft exists
 $draft = $_SESSION['bake_draft'] ?? [];
 
+// Handle AJAX Temp Uploads
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_temp') {
+    header('Content-Type: application/json');
+    if (!is_logged_in()) { echo json_encode(['error' => 'Please sign in first.']); exit; }
+    
+    if (empty($_FILES['project_files'])) {
+        echo json_encode(['error' => 'No files sent.']);
+        exit;
+    }
+    
+    $files = $_FILES['project_files'];
+    $fileCount = is_array($files['name']) ? count($files['name']) : 1;
+    
+    if (empty($_SESSION['temp_files'])) {
+        $_SESSION['temp_files'] = [];
+    }
+    
+    if (count($_SESSION['temp_files']) + $fileCount > 5) {
+         echo json_encode(['error' => 'You can upload a maximum of 5 files in total.']);
+         exit;
+    }
+    
+    $blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
+    $tempFolder = __DIR__ . '/assets/uploads/temp/';
+    if (!is_dir($tempFolder)) {
+        mkdir($tempFolder, 0755, true);
+    }
+    
+    $totalSize = 0;
+    for ($i = 0; $i < $fileCount; $i++) {
+        $size = is_array($files['size']) ? $files['size'][$i] : $files['size'];
+        $totalSize += $size;
+    }
+    
+    foreach ($_SESSION['temp_files'] as $f) {
+        $fullPath = __DIR__ . '/' . $f['path'];
+        if (file_exists($fullPath)) {
+            $totalSize += filesize($fullPath);
+        }
+    }
+    
+    if ($totalSize > 10 * 1024 * 1024) {
+        echo json_encode(['error' => 'Total size of all files must not exceed 10MB.']);
+        exit;
+    }
+    
+    for ($i = 0; $i < $fileCount; $i++) {
+        $name = is_array($files['name']) ? $files['name'][$i] : $files['name'];
+        $tmpName = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
+        $error = is_array($files['error']) ? $files['error'][$i] : $files['error'];
+        
+        if ($error !== UPLOAD_ERR_OK) continue;
+        
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (in_array($ext, $blacklist)) {
+            echo json_encode(['error' => "Dangerous file extension (." . htmlspecialchars($ext) . ") is not allowed."]);
+            exit;
+        }
+        
+        $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', basename($name));
+        $uniqueName = time() . '_' . uniqid() . '_' . $sanitizedName;
+        $destPath = $tempFolder . $uniqueName;
+        
+        if (move_uploaded_file($tmpName, $destPath)) {
+            $_SESSION['temp_files'][] = [
+                'name' => $name,
+                'path' => 'assets/uploads/temp/' . $uniqueName
+            ];
+        }
+    }
+    
+    echo json_encode(['success' => true, 'files' => $_SESSION['temp_files']]);
+    exit;
+}
+
+// Handle AJAX Temp File Deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_temp_file') {
+    header('Content-Type: application/json');
+    $path = $_POST['path'] ?? '';
+    if (!empty($_SESSION['temp_files'])) {
+        foreach ($_SESSION['temp_files'] as $key => $file) {
+            if ($file['path'] === $path) {
+                $fullPath = __DIR__ . '/' . $path;
+                if (file_exists($fullPath)) {
+                    @unlink($fullPath);
+                }
+                unset($_SESSION['temp_files'][$key]);
+                break;
+            }
+        }
+        $_SESSION['temp_files'] = array_values($_SESSION['temp_files']);
+    }
+    echo json_encode(['success' => true, 'files' => $_SESSION['temp_files'] ?? []]);
+    exit;
+}
+
 // Handle AI Description Generator (AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'ai_generate') {
     header('Content-Type: application/json');
     if (!is_logged_in()) { echo json_encode(['error' => 'Not logged in']); exit; }
     $u      = current_user();
-    $result = ai_generate_description(
+    $tempFiles = $_SESSION['temp_files'] ?? [];
+    
+    $result = ai_generate_detailed_concept(
         $_POST['service']     ?? '',
         $_POST['deadline']    ?? '',
         $_POST['description'] ?? '',
         $u['full_name'],
-        $u['about_business'] ?? ''
+        $u['about_business'] ?? '',
+        $tempFiles
     );
     echo json_encode(['text' => $result ?: 'Could not generate. Please try again.']);
     exit;
 }
 
+// Handle AI Market Analysis (AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'ai_market_analysis') {
+    header('Content-Type: application/json');
+    if (!is_logged_in()) { echo json_encode(['error' => 'Not logged in']); exit; }
+    
+    $service = $_POST['service'] ?? '';
+    $description = $_POST['description'] ?? '';
+    
+    $result = ai_market_analysis($service, $description);
+    if ($result) {
+        echo json_encode($result);
+    } else {
+        echo json_encode(['error' => 'Market analysis failed. Please try again.']);
+    }
+    exit;
+}
+
+// Handle AI Cleanup (AJAX)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'ai_cleanup') {
+    header('Content-Type: application/json');
+    if (!empty($_SESSION['temp_files'])) {
+        foreach ($_SESSION['temp_files'] as $file) {
+            $fullPath = __DIR__ . '/' . $file['path'];
+            if (file_exists($fullPath)) {
+                @unlink($fullPath);
+            }
+        }
+        unset($_SESSION['temp_files']);
+    }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 // Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_bake') {
-    // Save draft to session first (so data is preserved even if not logged in)
     $_SESSION['bake_draft'] = [
         'service_type'        => $_POST['service_type']        ?? '',
         'content_language'    => $_POST['content_language']    ?? 'english',
@@ -48,56 +179,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (empty($data['service_type']) || empty($data['deadline']) || empty($data['project_description'])) {
         $error = "Please fill in all required fields.";
     } else {
-        // Process uploaded files
+        // Process temporary uploaded files from session and move them permanently
         $uploadedFiles = [];
-        if (!empty($_FILES['project_files']['name'][0])) {
-            $files = $_FILES['project_files'];
-            $totalSize = 0;
-            $fileCount = count($files['name']);
-            if ($fileCount > 5) {
-                $error = "You can upload a maximum of 5 files.";
-            } else {
-                $blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
-                for ($i = 0; $i < $fileCount; $i++) {
-                    $totalSize += $files['size'][$i];
-                    $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
-                    if (in_array($ext, $blacklist)) {
-                        $error = "Dangerous file extension (." . htmlspecialchars($ext) . ") is not allowed.";
-                        break;
-                    }
-                }
-                if (empty($error) && $totalSize > 10 * 1024 * 1024) {
-                    $error = "Total size of all files must not exceed 10MB.";
-                }
-                if (empty($error)) {
-                    // Create folder if not exists
-                    $ingFolder = __DIR__ . '/assets/uploads/ingredients/';
-                    if (!is_dir($ingFolder)) {
-                        mkdir($ingFolder, 0755, true);
-                    }
-                    for ($i = 0; $i < $fileCount; $i++) {
-                        if ($files['error'][$i] === UPLOAD_ERR_OK) {
-                            $originalName = basename($files['name'][$i]);
-                            // Sanitize name
-                            $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-                            $uniqueName = time() . '_' . uniqid() . '_' . $sanitizedName;
-                            $destPath = $ingFolder . $uniqueName;
-                            if (move_uploaded_file($files['tmp_name'][$i], $destPath)) {
-                                $uploadedFiles[] = [
-                                    'name' => $originalName,
-                                    'path' => 'assets/uploads/ingredients/' . $uniqueName
-                                ];
-                            }
-                        }
+        if (!empty($_SESSION['temp_files'])) {
+            $ingFolder = __DIR__ . '/assets/uploads/ingredients/';
+            if (!is_dir($ingFolder)) {
+                mkdir($ingFolder, 0755, true);
+            }
+            foreach ($_SESSION['temp_files'] as $file) {
+                $tempPath = __DIR__ . '/' . $file['path'];
+                if (file_exists($tempPath)) {
+                    $originalName = basename($file['name']);
+                    $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+                    $uniqueName = time() . '_' . uniqid() . '_' . $sanitizedName;
+                    $destPath = $ingFolder . $uniqueName;
+                    if (rename($tempPath, $destPath)) {
+                        $uploadedFiles[] = [
+                            'name' => $originalName,
+                            'path' => 'assets/uploads/ingredients/' . $uniqueName
+                        ];
                     }
                 }
             }
+            unset($_SESSION['temp_files']);
         }
 
         if (empty($error)) {
             $uploadedJson = empty($uploadedFiles) ? null : json_encode($uploadedFiles);
 
-            // Get service pricing
             $svc = $pdo->prepare("SELECT price_from_inr, market_price_inr FROM services WHERE title LIKE ? LIMIT 1");
             $svc->execute(['%' . $data['service_type'] . '%']);
             $svcData = $svc->fetch();
@@ -117,13 +226,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $uploadedJson
             ]);
 
-            // Send confirmation email
             try {
                 $mailer = new Mailer();
                 $mailer->sendBakeConfirmation($user['email'], $user['full_name'], $data['service_type'], $data['deadline']);
             } catch(Exception $e) {}
 
-            // Clear draft
             unset($_SESSION['bake_draft']);
             $submitted = true;
         }
@@ -337,6 +444,23 @@ $selectedService = $_GET['service'] ?? ($draft['service_type'] ?? '');
 
         <!-- SECTION 3: Project Ingredients -->
         <div class="bake-section-title" style="margin-top:2.5rem;"><span class="num">3</span> Project Ingredients</div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label class="form-label">Project Assets & Reference Files <small style="color:var(--text-secondary); font-weight:400;">(Max 5 files, total up to 10MB. Include logos, documents, or reference files)</small></label>
+          <input type="file" id="project-files" class="form-input" multiple style="padding: 0.6rem 0.75rem; height: auto;" onchange="uploadFilesImmediately(event)">
+          <div id="file-list-preview" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display:flex; flex-direction:column; gap:6px;">
+            <?php if (!empty($_SESSION['temp_files'])): ?>
+              <?php foreach ($_SESSION['temp_files'] as $f): ?>
+                <div class="temp-file-row" style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-secondary); padding:6px 12px; border-radius:6px; border:1px solid var(--border-medium);" data-path="<?php echo htmlspecialchars($f['path']); ?>">
+                  <span>📁 <?php echo htmlspecialchars($f['name']); ?></span>
+                  <button type="button" style="background:none; border:none; color:#ef4444; font-weight:700; cursor:pointer;" onclick="deleteTempFile('<?php echo htmlspecialchars($f['path']); ?>')">Delete</button>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+          <div id="upload-status" style="display:none; color:var(--accent-orange); font-size:0.85rem; font-weight:700; margin-top:0.5rem;">Uploading files to oven... ⏳</div>
+        </div>
+
         <div class="form-group">
           <div class="textarea-header">
             <label class="form-label" style="margin:0;">Describe your project</label>
@@ -353,10 +477,52 @@ $selectedService = $_GET['service'] ?? ($draft['service_type'] ?? '');
           <div id="ai-loading" style="display:none; color:var(--accent-orange); font-size:0.88rem; font-weight:700; margin-top:0.5rem; animation: pulse-glow 1.5s infinite;">🤖 AI is kneading your project description...</div>
         </div>
 
-        <div class="form-group" style="margin-top: 1.5rem;">
-          <label class="form-label">Project Assets & Reference Files <small style="color:var(--text-secondary); font-weight:400;">(Max 5 files, total up to 10MB. Include logos, documents, or reference files)</small></label>
-          <input type="file" name="project_files[]" id="project-files" class="form-input" multiple style="padding: 0.6rem 0.75rem; height: auto;" onchange="validateFiles(event)">
-          <div id="file-list-preview" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;"></div>
+        <!-- AI Suggestions Panel -->
+        <div id="ai-suggestions-panel" class="admin-card" style="display:none; background: rgba(234, 88, 12, 0.03); border: 1.5px dashed var(--accent-orange); margin-top: 1rem; padding: 1.25rem; border-radius: 8px;">
+          <strong style="color:var(--text-primary); font-size:0.9rem; display: block; margin-bottom: 0.5rem;">🤖 AI Suggested Project Brief:</strong>
+          <p id="ai-suggestion-text" style="color:var(--text-secondary); font-size:0.88rem; line-height:1.5; white-space:pre-line; margin-bottom: 1rem; background:#fff; padding:10px; border-radius:6px; border:1px solid var(--border-medium);"></p>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn btn-primary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="applyAISuggestion()">Apply Suggestion</button>
+            <button type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="discardAISuggestion()">Discard</button>
+          </div>
+        </div>
+
+        <!-- AI Market Analysis -->
+        <div style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+          <?php if (is_logged_in()): ?>
+            <button type="button" class="btn btn-secondary" id="market-analysis-btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border-color: var(--accent-orange); color: var(--accent-orange); background: transparent;" onclick="runMarketAnalysis()">
+              📊 Run AI Market Value Analysis
+            </button>
+          <?php else: ?>
+            <div style="text-align:center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 6px; font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Sign in to unlock AI Market Analysis & pricing comparison 📊</div>
+          <?php endif; ?>
+          <div id="market-analysis-loading" style="display:none; color:var(--accent-orange); font-size:0.88rem; font-weight:700; text-align:center; margin-top:0.5rem;">🤖 AI is doing a comparative market analysis...</div>
+          
+          <div id="market-analysis-card" class="admin-card" style="display:none; border: 1px solid var(--border-medium); margin-top: 1rem; padding: 1.5rem; border-radius: 8px; background: var(--bg-secondary);">
+            <h4 style="color:var(--text-primary); margin-top:0; margin-bottom:1rem; font-size: 1.05rem;">📊 Project Cost & Market Analysis</h4>
+            
+            <div class="pricing-compare" style="margin-bottom: 1.5rem; display: flex; gap: 1rem;">
+              <div class="price-box" style="box-shadow: var(--shadow-sm); flex: 1; text-align: center; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid var(--border-medium);">
+                <div class="price-label" style="font-size:0.8rem; color:var(--text-secondary); text-transform:uppercase;">Agency Market Average</div>
+                <div class="price-val" id="analysis-market-price" style="font-size: 1.5rem; font-weight: 800; color: var(--text-secondary); margin-top: 4px;">₹0</div>
+              </div>
+              <div class="price-box ours" style="box-shadow: var(--shadow-sm); flex: 1; text-align: center; background: var(--bg-dark); padding: 12px; border-radius: 8px; border: 1.5px solid var(--accent-orange);">
+                <div class="price-label" style="font-size:0.8rem; color:#C4A882; text-transform:uppercase;">Adloaf Exclusive Rate</div>
+                <div class="price-val" id="analysis-adloaf-price" style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-top: 4px;">₹0</div>
+                <div class="price-save" id="analysis-savings-pct" style="display:inline-block; background:var(--accent-orange); color:#fff; font-size:0.7rem; padding:2px 8px; border-radius:10px; margin-top:4px; font-weight:700;">Save 35%</div>
+              </div>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <strong style="color:var(--text-primary); font-size:0.85rem; display:block; margin-bottom: 0.5rem; text-transform:uppercase; letter-spacing:0.5px;">Standard agency price breakdown:</strong>
+              <div id="analysis-breakdown-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+            </div>
+            
+            <div>
+              <strong style="color:var(--text-primary); font-size:0.85rem; display:block; margin-bottom: 0.4rem; text-transform:uppercase; letter-spacing:0.5px;">Why Adloaf is better:</strong>
+              <p id="analysis-text-content" style="color:var(--text-secondary); font-size:0.88rem; line-height:1.5; margin:0;"></p>
+            </div>
+          </div>
         </div>
 
         <!-- SECTION 4: Pricing -->
@@ -374,13 +540,13 @@ $selectedService = $_GET['service'] ?? ($draft['service_type'] ?? '');
             </select>
           </div>
           <p style="color:var(--text-secondary); font-size:0.85rem; margin:0.5rem 0 1rem; font-weight: 600;">Approximate pricing for selected service:</p>
-          <div class="pricing-compare">
-            <div class="price-box ours" style="box-shadow: var(--shadow-sm);">
+          <div class="pricing-compare" style="display: flex; gap: 1rem;">
+            <div class="price-box ours" style="box-shadow: var(--shadow-sm); flex: 1;">
               <div class="price-label">Adloaf — Starting From</div>
               <div class="price-val" id="adloaf-price">₹0</div>
               <div class="price-save">Best Value</div>
             </div>
-            <div class="price-box" style="box-shadow: var(--shadow-sm);">
+            <div class="price-box" style="box-shadow: var(--shadow-sm); flex: 1;">
               <div class="price-label">Market Average</div>
               <div class="price-val" id="market-price" style="color:var(--text-secondary);">₹0</div>
               <div style="color:#10b981; font-size:0.8rem; font-weight:700; margin-top: 4px;" id="savings-text"></div>
@@ -528,6 +694,7 @@ function updatePricing() {
   } else {
     panel.style.display = 'none';
   }
+  updateMarketAnalysisPricing();
 }
 
 function displayError(msg) {
@@ -536,6 +703,161 @@ function displayError(msg) {
     errCard.textContent = msg;
     errCard.style.display = 'block';
     errCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+let lastMarketAnalysis = null;
+let formSubmitted = false;
+
+function updateMarketAnalysisPricing() {
+  if (!lastMarketAnalysis) return;
+  const currSelect = document.getElementById('currency-select');
+  const curr   = currSelect ? currSelect.value : 'INR';
+  const rate   = exchangeRates[curr] || 1;
+  const sym    = currencySymbols[curr] || curr;
+  
+  const marketVal = parseFloat(lastMarketAnalysis.market_price);
+  const adloafVal = parseFloat(lastMarketAnalysis.adloaf_price);
+  
+  document.getElementById('analysis-market-price').textContent = sym + Math.round(marketVal * rate).toLocaleString();
+  document.getElementById('analysis-adloaf-price').textContent = sym + Math.round(adloafVal * rate).toLocaleString();
+  
+  const pct = Math.round(((marketVal - adloafVal) / marketVal) * 100);
+  document.getElementById('analysis-savings-pct').textContent = `Save ${pct}%`;
+  
+  // Render breakdown list
+  const list = document.getElementById('analysis-breakdown-list');
+  list.innerHTML = '';
+  if (lastMarketAnalysis.breakdown && lastMarketAnalysis.breakdown.length > 0) {
+    lastMarketAnalysis.breakdown.forEach(item => {
+      const itemRow = document.createElement('div');
+      itemRow.style.cssText = 'display:flex; justify-content:space-between; font-size:0.85rem; border-bottom:1px solid var(--border-medium); padding: 4px 0; color:var(--text-secondary);';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = item.item;
+      
+      const priceSpan = document.createElement('span');
+      priceSpan.style.fontWeight = '700';
+      priceSpan.textContent = sym + Math.round(item.price * rate).toLocaleString();
+      
+      itemRow.appendChild(nameSpan);
+      itemRow.appendChild(priceSpan);
+      list.appendChild(itemRow);
+    });
+  }
+}
+
+async function uploadFilesImmediately(event) {
+  const input = event.target;
+  if (!input.files || input.files.length === 0) return;
+  
+  const files = Array.from(input.files);
+  const errCard = document.getElementById('js-error-card');
+  if (errCard) errCard.style.display = 'none';
+  
+  // Client side validation
+  if (files.length > 5) {
+    displayError('You can upload a maximum of 5 files.');
+    input.value = '';
+    return;
+  }
+  
+  const blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
+  let totalSize = 0;
+  for (let file of files) {
+    totalSize += file.size;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (blacklist.includes(ext)) {
+      displayError('Dangerous file extension (.' + ext + ') is not allowed.');
+      input.value = '';
+      return;
+    }
+  }
+  
+  if (totalSize > 10 * 1024 * 1024) {
+    displayError('Total size of all files must not exceed 10MB.');
+    input.value = '';
+    return;
+  }
+  
+  const statusDiv = document.getElementById('upload-status');
+  if (statusDiv) statusDiv.style.display = 'block';
+  
+  const formData = new FormData();
+  formData.append('action', 'upload_temp');
+  formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
+  for (let i = 0; i < files.length; i++) {
+    formData.append('project_files[]', files[i]);
+  }
+  
+  try {
+    const resp = await fetch('bake.php', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTempFilesList(data.files);
+    } else if (data.error) {
+      displayError(data.error);
+    }
+  } catch (e) {
+    displayError('Failed to upload files. Please try again.');
+  } finally {
+    if (statusDiv) statusDiv.style.display = 'none';
+    input.value = '';
+  }
+}
+
+function renderTempFilesList(files) {
+  const preview = document.getElementById('file-list-preview');
+  if (!preview) return;
+  preview.innerHTML = '';
+  if (!files || files.length === 0) return;
+  
+  files.forEach(file => {
+    const row = document.createElement('div');
+    row.className = 'temp-file-row';
+    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:var(--bg-secondary); padding:6px 12px; border-radius:6px; border:1px solid var(--border-medium);';
+    row.setAttribute('data-path', file.path);
+    
+    const span = document.createElement('span');
+    span.textContent = '📁 ' + file.name;
+    
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.style.cssText = 'background:none; border:none; color:#ef4444; font-weight:700; cursor:pointer;';
+    btn.textContent = 'Delete';
+    btn.onclick = () => deleteTempFile(file.path);
+    
+    row.appendChild(span);
+    row.appendChild(btn);
+    preview.appendChild(row);
+  });
+}
+
+async function deleteTempFile(path) {
+  const errCard = document.getElementById('js-error-card');
+  if (errCard) errCard.style.display = 'none';
+  
+  try {
+    const resp = await fetch('bake.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        action: 'delete_temp_file',
+        path: path,
+        csrf_token: document.querySelector('[name=csrf_token]').value
+      })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      renderTempFilesList(data.files);
+    } else if (data.error) {
+      displayError(data.error);
+    }
+  } catch (e) {
+    displayError('Failed to delete the file.');
   }
 }
 
@@ -573,57 +895,109 @@ async function generateAI() {
     });
     const data = await resp.json();
     if (data.text) {
-      document.getElementById('description-textarea').value = data.text;
-      document.getElementById('ai-description-hidden').value = data.text;
-      updateStepProgress();
+      const suggestionsPanel = document.getElementById('ai-suggestions-panel');
+      const suggestionText = document.getElementById('ai-suggestion-text');
+      if (suggestionsPanel && suggestionText) {
+        suggestionText.textContent = data.text;
+        suggestionsPanel.style.display = 'block';
+      }
     } else if (data.error) {
       displayError('AI Service Error: ' + data.error);
     }
   } catch(e) { 
     displayError('AI generation request failed. Please check your connection and try again.'); 
+  } finally {
+    document.getElementById('ai-loading').style.display = 'none';
+    if (aiBtn) aiBtn.disabled = false;
   }
-  document.getElementById('ai-loading').style.display = 'none';
-  if (aiBtn) aiBtn.disabled = false;
 }
 
-function validateFiles(event) {
-  const input = event.target;
-  const preview = document.getElementById('file-list-preview');
-  preview.innerHTML = '';
+function applyAISuggestion() {
+  const suggestionText = document.getElementById('ai-suggestion-text').textContent;
+  document.getElementById('description-textarea').value = suggestionText;
+  document.getElementById('ai-description-hidden').value = suggestionText;
   
-  if (!input.files || input.files.length === 0) return;
-  
-  const files = Array.from(input.files);
-  if (files.length > 5) {
-    displayError('You can upload a maximum of 5 files.');
-    input.value = '';
-    return;
+  const suggestionsPanel = document.getElementById('ai-suggestions-panel');
+  if (suggestionsPanel) {
+    suggestionsPanel.style.display = 'none';
   }
   
-  let totalSize = 0;
-  const blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
-  
-  for (let file of files) {
-    totalSize += file.size;
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (blacklist.includes(ext)) {
-      displayError('Dangerous file extension (.' + ext + ') is not allowed.');
-      input.value = '';
-      return;
-    }
+  updateStepProgress();
+  cleanupTempFilesSilently();
+}
+
+function discardAISuggestion() {
+  const suggestionsPanel = document.getElementById('ai-suggestions-panel');
+  if (suggestionsPanel) {
+    suggestionsPanel.style.display = 'none';
   }
-  
-  if (totalSize > 10 * 1024 * 1024) {
-    displayError('Total size of all files must not exceed 10MB.');
-    input.value = '';
-    return;
+}
+
+async function cleanupTempFilesSilently() {
+  try {
+    await fetch('bake.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        action: 'ai_cleanup',
+        csrf_token: document.querySelector('[name=csrf_token]').value
+      })
+    });
+    renderTempFilesList([]);
+  } catch (e) {
+    console.error('Silently cleaning up temp files failed', e);
   }
-  
-  // Display selected files
-  preview.innerHTML = '📁 Files selected: ' + files.map(f => `${f.name} (${Math.round(f.size/1024)} KB)`).join(', ');
-  
+}
+
+async function runMarketAnalysis() {
+  const service = document.getElementById('service-select').value;
+  const desc    = document.getElementById('description-textarea').value;
   const errCard = document.getElementById('js-error-card');
+  
   if (errCard) errCard.style.display = 'none';
+  
+  if (!service) {
+    displayError('Please select a service type first.');
+    return;
+  }
+  if (!desc.trim()) {
+    displayError('Please describe your project first so the AI can analyze your project ingredients.');
+    return;
+  }
+  
+  const loadingDiv = document.getElementById('market-analysis-loading');
+  const analysisCard = document.getElementById('market-analysis-card');
+  const runBtn = document.getElementById('market-analysis-btn');
+  
+  if (loadingDiv) loadingDiv.style.display = 'block';
+  if (analysisCard) analysisCard.style.display = 'none';
+  if (runBtn) runBtn.disabled = true;
+  
+  try {
+    const resp = await fetch('bake.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({
+        action: 'ai_market_analysis',
+        service,
+        description: desc,
+        csrf_token: document.querySelector('[name=csrf_token]').value
+      })
+    });
+    const data = await resp.json();
+    if (data.error) {
+      displayError('Market Analysis Error: ' + data.error);
+    } else if (data.market_price) {
+      lastMarketAnalysis = data;
+      updateMarketAnalysisPricing();
+      if (analysisCard) analysisCard.style.display = 'block';
+    }
+  } catch (e) {
+    displayError('Failed to run market value analysis. Please try again.');
+  } finally {
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (runBtn) runBtn.disabled = false;
+  }
 }
 
 function showOven(e) {
@@ -632,9 +1006,9 @@ function showOven(e) {
   if (errCard) errCard.style.display = 'none';
   
   if (form.checkValidity()) {
+    formSubmitted = true;
     document.getElementById('oven-overlay').classList.add('active');
   } else {
-    // Let browser display native prompts, or display custom error if empty
     const service = document.getElementById('service-select').value;
     const deadline = document.getElementById('deadline-input').value;
     const description = document.getElementById('description-textarea').value.trim();
@@ -644,6 +1018,15 @@ function showOven(e) {
     }
   }
 }
+
+window.addEventListener('beforeunload', function() {
+  if (!formSubmitted) {
+    const formData = new FormData();
+    formData.append('action', 'ai_cleanup');
+    formData.append('csrf_token', document.querySelector('[name=csrf_token]').value);
+    navigator.sendBeacon('bake.php', formData);
+  }
+});
 
 // Initial triggers
 document.getElementById('service-select').dispatchEvent(new Event('change'));

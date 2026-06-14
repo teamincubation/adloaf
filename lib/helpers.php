@@ -180,3 +180,166 @@ Write in first person as the client. Be specific and professional.";
     } catch (Exception $e) {}
     return null;
 }
+
+// ─── Document Text Extraction Helpers ─────────────────────────────────────────
+function read_docx($filename) {
+    if (!$filename || !file_exists($filename)) return '';
+    $zip = new ZipArchive();
+    if ($zip->open($filename) === TRUE) {
+        $xml = $zip->getFromName('word/document.xml');
+        $zip->close();
+        if ($xml) {
+            $xml = str_replace('</w:r>', '</w:r> ', $xml);
+            return strip_tags($xml);
+        }
+    }
+    return '';
+}
+
+function read_xlsx($filename) {
+    if (!$filename || !file_exists($filename)) return '';
+    $zip = new ZipArchive();
+    if ($zip->open($filename) === TRUE) {
+        $xml = $zip->getFromName('xl/sharedStrings.xml');
+        $zip->close();
+        if ($xml) {
+            return strip_tags($xml);
+        }
+    }
+    return '';
+}
+
+// ─── Multimodal Detailed AI Concept Generator ──────────────────────────────────
+function ai_generate_detailed_concept($service, $deadline, $userInput, $userName = '', $business = '', $tempFiles = []) {
+    $parts = [];
+    
+    // Main text prompt
+    $prompt = "You are a senior creative director at Adloaf design agency. 
+A client named '{$userName}' from business '{$business}' wants a '{$service}' project.
+Their deadline is {$deadline}.
+Their initial project brief is: \"{$userInput}\"\n\n";
+
+    // Analyze files and add to prompt or parts
+    if (!empty($tempFiles)) {
+        $prompt .= "The client has uploaded reference documents/images for this request. Analyze their content below:\n";
+        foreach ($tempFiles as $file) {
+            $path = $file['path'];
+            $fullPath = __DIR__ . '/../' . $path;
+            if (!file_exists($fullPath)) continue;
+            
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $mime = mime_content_type($fullPath);
+            
+            // Multimodal parts (Images & PDFs)
+            if (in_array($mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'])) {
+                $base64 = base64_encode(file_get_contents($fullPath));
+                $parts[] = [
+                    'inlineData' => [
+                        'mimeType' => $mime,
+                        'data'     => $base64
+                    ]
+                ];
+                $prompt .= "[Attached File: {$file['name']} (analyzed directly via vision/document parser)]\n";
+            }
+            // Text extraction (TXT, CSV, DOCX, XLSX)
+            else if ($ext === 'txt' || $ext === 'csv') {
+                $content = file_get_contents($fullPath);
+                $prompt .= "--- Content of {$file['name']} ---\n" . substr($content, 0, 10000) . "\n-----------------\n";
+            } else if ($ext === 'docx') {
+                $content = read_docx($fullPath);
+                $prompt .= "--- Content of docx {$file['name']} ---\n" . substr($content, 0, 10000) . "\n-----------------\n";
+            } else if ($ext === 'xlsx') {
+                $content = read_xlsx($fullPath);
+                $prompt .= "--- Content of spreadsheet {$file['name']} ---\n" . substr($content, 0, 10000) . "\n-----------------\n";
+            } else {
+                $prompt .= "[Attached File: {$file['name']} (binary file, analysis skipped)]\n";
+            }
+        }
+    }
+    
+    $prompt .= "\nTask: Based on all the details, files content, and project description above, write a detailed, professional, highly elaborated, and attractive creative project description (approx 200-300 words). It must sound extremely convincing, structured, and capture their brand vision perfectly. Write in first person as the client, explaining what 'we' want, our goals, target audience, design style preferences, and key deliverables. Don't add introductory sentences; output the completed brief directly.";
+    
+    // Add text prompt at the end of the parts array
+    $parts[] = ['text' => $prompt];
+    
+    try {
+        $apiKey = GEMINI_API_KEY;
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+        $payload = json_encode([
+            'contents' => [['parts' => $parts]],
+            'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 800]
+        ]);
+        
+        $ctx = stream_context_create([
+            'http' => [
+                'method'  => 'POST',
+                'header'  => "Content-Type: application/json\r\nContent-Length: " . strlen($payload),
+                'content' => $payload,
+                'timeout' => 20,
+            ]
+        ]);
+        $res = @file_get_contents($url, false, $ctx);
+        if ($res) {
+            $data = json_decode($res, true);
+            return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+        }
+    } catch (Exception $e) {}
+    
+    return null;
+}
+
+// ─── AI Market Analysis ────────────────────────────────────────────────────────
+function ai_market_analysis($service, $description) {
+    $prompt = "You are a professional IT consultant and digital agency estimator.
+Analyze the market pricing and structure for the following project request:
+Service: {$service}
+Project Description: \"{$description}\"
+
+Tasks:
+1. Determine a realistic average total Market Price in Indian Rupees (INR) for this project (e.g. 60000). Keep it reasonable based on the description scope.
+2. Calculate a recommended Adloaf Price which is 20% to 40% cheaper (e.g. 38000).
+3. Create an itemized market cost breakdown of 3 to 4 major tasks (e.g. UI/UX Wireframing, Copywriting, Core Development).
+4. Provide a brief analysis (50-80 words) summarizing why standard agencies charge this high, and how Adloaf operates as a visual bakery offering massive cost savings without sacrificing quality.
+
+You MUST respond ONLY with a valid JSON object. Do not wrap it in markdown block tags. The JSON structure must be:
+{
+  \"market_price\": 60000,
+  \"adloaf_price\": 38000,
+  \"breakdown\": [
+     { \"item\": \"Wireframing & UX\", \"price\": 12000 },
+     { \"item\": \"UI Design & Visuals\", \"price\": 18000 },
+     { \"item\": \"Frontend Development\", \"price\": 30000 }
+  ],
+  \"analysis\": \"Analysis text goes here...\"
+}";
+
+    try {
+        $apiKey = GEMINI_API_KEY;
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+        $payload = json_encode([
+            'contents' => [['parts' => [['text' => $prompt]]]],
+            'generationConfig' => [
+                'temperature' => 0.2, 
+                'maxOutputTokens' => 500,
+                'responseMimeType' => 'application/json'
+            ]
+        ]);
+        
+        $ctx = stream_context_create([
+            'http' => [
+                'method'  => 'POST',
+                'header'  => "Content-Type: application/json\r\nContent-Length: " . strlen($payload),
+                'content' => $payload,
+                'timeout' => 15,
+            ]
+        ]);
+        $res = @file_get_contents($url, false, $ctx);
+        if ($res) {
+            $data = json_decode($res, true);
+            $responseText = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            return json_decode($responseText, true);
+        }
+    } catch (Exception $e) {}
+    
+    return null;
+}
