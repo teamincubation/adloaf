@@ -95,7 +95,7 @@ INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES
 ('base_currency', 'INR'),
 ('base_currency_symbol', '₹'),
 ('whatsapp_admin', '916282563209'),
-('gemini_api_key', 'AIzaSyAQ.Ab8RN6JCt_U1AmPchx581B3lP-cTpmZnqJt1jiUeaGekV6JSeg');
+('gemini_api_key', 'YOUR_GEMINI_API_KEY');
 
 -- Add pricing columns to services table
 ALTER TABLE services 

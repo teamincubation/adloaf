@@ -106,7 +106,7 @@ require_once '../config.php';
     <div class="admin-layout">
         <aside class="admin-sidebar">
             <a href="index.php" class="logo" style="justify-content: center;">
-                <span class="logo-text">Adloaf<span class="logo-dot">.</span> Admin</span>
+                <span class="logo-text">adloaf<span class="logo-dot">.</span> Admin</span>
             </a>
             <?php $current_page = basename($_SERVER['PHP_SELF']); ?>
             <ul class="admin-nav">

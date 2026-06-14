@@ -21,7 +21,7 @@ $baseCurrency = site_setting('base_currency', 'INR');
 <!-- Standardized Navigation -->
 <header class="header scrolled" id="header">
   <div class="container nav-container">
-    <a href="index.php" class="logo" aria-label="Adloaf Home">
+    <a href="index.php" class="logo" aria-label="adloaf Home">
       <div class="logo-icon-wrap">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
@@ -29,7 +29,7 @@ $baseCurrency = site_setting('base_currency', 'INR');
           <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
         </svg>
       </div>
-      <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+      <span class="logo-text">adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
     </a>
 
     <nav aria-label="Main Navigation">
@@ -170,7 +170,7 @@ $baseCurrency = site_setting('base_currency', 'INR');
               <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
             </svg>
           </div>
-          <span class="logo-text">Adloaf<span class="logo-dot">.</span></span>
+          <span class="logo-text">adloaf<span class="logo-dot">.</span></span>
         </a>
         <p class="footer-desc">Freshly baked marketing strategies, brand visual concepts, graphic assets, and dynamic web interfaces designed to help brands grow.</p>
       </div>
@@ -196,7 +196,7 @@ $baseCurrency = site_setting('base_currency', 'INR');
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 Adloaf Creative Agency. All rights reserved.</p>
+      <p>&copy; 2026 adloaf Creative Agency. All rights reserved.</p>
     </div>
   </div>
 </footer>

@@ -97,11 +97,11 @@ try {
 <div class="kpi-grid">
     <div class="kpi-card">
         <span class="kpi-title">Total Revenue</span>
-        <span class="kpi-value revenue">$<?php echo number_format($totalRevenue, 2); ?></span>
+        <span class="kpi-value revenue"><?php echo site_setting('base_currency_symbol', '₹') . number_format($totalRevenue, 2); ?></span>
     </div>
     <div class="kpi-card">
         <span class="kpi-title">Pending Payment</span>
-        <span class="kpi-value pending-payment">$<?php echo number_format($pendingPayment, 2); ?></span>
+        <span class="kpi-value pending-payment"><?php echo site_setting('base_currency_symbol', '₹') . number_format($pendingPayment, 2); ?></span>
     </div>
     <div class="kpi-card">
         <span class="kpi-title">Total Clients</span>

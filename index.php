@@ -55,7 +55,7 @@ $siteStats = [
   <!-- HEADER & NAVIGATION -->
   <header class="header" id="header">
     <div class="container nav-container">
-      <a href="#" class="logo" id="nav-logo" aria-label="Adloaf Home">
+      <a href="#" class="logo" id="nav-logo" aria-label="adloaf Home">
         <div class="logo-icon-wrap">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
@@ -63,7 +63,7 @@ $siteStats = [
             <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
           </svg>
         </div>
-        <span class="logo-text">Adloaf<span class="logo-dot">.</span></span>
+        <span class="logo-text">adloaf<span class="logo-dot">.</span></span>
       </a>
 
       <nav aria-label="Main Navigation">
@@ -186,6 +186,61 @@ $siteStats = [
     </div>
   </section>
 
+  <!-- STATS COUNTER SECTION -->
+  <?php if ($siteStats['clients'] > 0 || $siteStats['projects'] > 0 || $siteStats['years'] > 0): ?>
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <?php if ($siteStats['clients'] > 0): ?>
+        <div class="stat-item reveal">
+          <div class="stat-num" data-count="<?php echo $siteStats['clients']; ?>">0</div>
+          <div class="stat-label">Happy Clients</div>
+        </div>
+        <?php endif; ?>
+        <?php if ($siteStats['projects'] > 0): ?>
+        <div class="stat-item reveal reveal-delay-1">
+          <div class="stat-num" data-count="<?php echo $siteStats['projects']; ?>">0</div>
+          <div class="stat-label">Projects Completed</div>
+        </div>
+        <?php endif; ?>
+        <?php if ($siteStats['years'] > 0): ?>
+        <div class="stat-item reveal reveal-delay-2">
+          <div class="stat-num" data-count="<?php echo $siteStats['years']; ?>">0</div>
+          <div class="stat-label">Years of Excellence</div>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
+  <!-- POPULAR CLIENTS MARQUEE -->
+  <?php if (!empty($popularClients)): ?>
+  <section class="clients-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="section-badge">Our Clients</span>
+        <h2 class="section-title">Trusted By Great Brands</h2>
+      </div>
+    </div>
+    <div class="marquee-outer">
+      <div class="marquee-track">
+        <?php foreach (array_merge($popularClients, $popularClients) as $client): ?>
+        <div class="marquee-item">
+          <?php if (!empty($client['website_url'])): ?>
+          <a href="<?php echo htmlspecialchars($client['website_url']); ?>" target="_blank" rel="noopener">
+          <?php endif; ?>
+            <img src="<?php echo htmlspecialchars($client['logo_path']); ?>" alt="<?php echo htmlspecialchars($client['client_name']); ?>" class="client-logo">
+          <?php if (!empty($client['website_url'])): ?>
+          </a>
+          <?php endif; ?>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+  </section>
+  <?php endif; ?>
+
   <!-- ABOUT SECTION -->
   <section class="about" id="about">
     <div class="container about-grid">
@@ -282,7 +337,7 @@ $siteStats = [
           </div>
           <h3 class="service-card-title"><?php echo htmlspecialchars($service['title']); ?></h3>
           <p class="service-card-desc"><?php echo htmlspecialchars($service['description']); ?></p>
-          <a href="#contact" class="service-link">
+          <a href="bake.php?service=<?php echo urlencode($service['title']); ?>" class="service-link">
             <?php echo htmlspecialchars($service['link_text']); ?>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -297,53 +352,7 @@ $siteStats = [
     </div>
   </section>
 
-  <!-- PORTFOLIO SECTION -->
-  <section class="portfolio" id="portfolio">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-badge">The Display Case</span>
-        <h2 class="section-title">Oven-Fresh Works</h2>
-        <p class="section-subtitle">Take a look at our showcase of active digital bakes. Filter categories using the tabs below to explore specific recipe results.</p>
-      </div>
 
-      <div class="portfolio-filters reveal">
-        <button class="filter-btn active" data-filter="all">All Bakes</button>
-        <button class="filter-btn" data-filter="websites">Websites</button>
-        <button class="filter-btn" data-filter="posters">Posters</button>
-        <button class="filter-btn" data-filter="branding">Branding</button>
-        <button class="filter-btn" data-filter="social">Social Media</button>
-        <button class="filter-btn" data-filter="uiconcepts">UI Concepts</button>
-      </div>
-
-      <div class="portfolio-grid" id="portfolio-grid">
-        <?php 
-        $delay = 0;
-        foreach ($portfolio as $item): 
-          $delayClass = $delay > 0 ? "reveal-delay-1" : "";
-        ?>
-        <div class="portfolio-item reveal <?php echo $delayClass; ?>" data-category="<?php echo htmlspecialchars($item['category']); ?>">
-          <div class="portfolio-img-wrap">
-            <img src="<?php echo htmlspecialchars($item['image_path']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" loading="lazy">
-            <div class="portfolio-overlay">
-              <div class="portfolio-overlay-text">
-                <span class="portfolio-tag"><?php echo htmlspecialchars(ucfirst($item['category'])); ?></span>
-                <h4 class="portfolio-overlay-title"><?php echo htmlspecialchars($item['title']); ?></h4>
-              </div>
-            </div>
-          </div>
-          <div class="portfolio-info">
-            <span class="portfolio-category"><?php echo htmlspecialchars(ucfirst($item['category'])); ?></span>
-            <h3 class="portfolio-title"><?php echo htmlspecialchars($item['title']); ?></h3>
-            <p class="portfolio-desc"><?php echo htmlspecialchars($item['description']); ?></p>
-          </div>
-        </div>
-        <?php 
-          $delay = ($delay + 1) % 2;
-        endforeach; 
-        ?>
-      </div>
-    </div>
-  </section>
 
   <!-- CREATIVE PROCESS SECTION -->
   <section class="process" id="process">
@@ -421,61 +430,6 @@ $siteStats = [
       </div>
     </div>
   </section>
-
-  <!-- STATS COUNTER SECTION -->
-  <?php if ($siteStats['clients'] > 0 || $siteStats['projects'] > 0 || $siteStats['years'] > 0): ?>
-  <section class="stats-section">
-    <div class="container">
-      <div class="stats-grid">
-        <?php if ($siteStats['clients'] > 0): ?>
-        <div class="stat-item reveal">
-          <div class="stat-num" data-count="<?php echo $siteStats['clients']; ?>">0</div>
-          <div class="stat-label">Happy Clients</div>
-        </div>
-        <?php endif; ?>
-        <?php if ($siteStats['projects'] > 0): ?>
-        <div class="stat-item reveal reveal-delay-1">
-          <div class="stat-num" data-count="<?php echo $siteStats['projects']; ?>">0</div>
-          <div class="stat-label">Projects Completed</div>
-        </div>
-        <?php endif; ?>
-        <?php if ($siteStats['years'] > 0): ?>
-        <div class="stat-item reveal reveal-delay-2">
-          <div class="stat-num" data-count="<?php echo $siteStats['years']; ?>">0</div>
-          <div class="stat-label">Years of Excellence</div>
-        </div>
-        <?php endif; ?>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
-
-  <!-- POPULAR CLIENTS MARQUEE -->
-  <?php if (!empty($popularClients)): ?>
-  <section class="clients-section">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-badge">Our Clients</span>
-        <h2 class="section-title">Trusted By Great Brands</h2>
-      </div>
-    </div>
-    <div class="marquee-outer">
-      <div class="marquee-track">
-        <?php foreach (array_merge($popularClients, $popularClients) as $client): ?>
-        <div class="marquee-item">
-          <?php if (!empty($client['website_url'])): ?>
-          <a href="<?php echo htmlspecialchars($client['website_url']); ?>" target="_blank" rel="noopener">
-          <?php endif; ?>
-            <img src="<?php echo htmlspecialchars($client['logo_path']); ?>" alt="<?php echo htmlspecialchars($client['client_name']); ?>" class="client-logo">
-          <?php if (!empty($client['website_url'])): ?>
-          </a>
-          <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-  </section>
-  <?php endif; ?>
 
   <!-- CTA SECTION -->
   <section class="cta-section">

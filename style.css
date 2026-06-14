@@ -2994,3 +2994,24 @@ body.admin-body select.form-input option {
   text-align: center;
 }
 
+/* --- Overhaul Updates & Mobile Tweaks --- */
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 991px) {
+  .mobile-only {
+    display: block !important;
+  }
+  /* Hide desktop-only header items on mobile viewports to prevent duplicates */
+  .header-actions .header-profile-menu,
+  .header-actions .btn-header {
+    display: none !important;
+  }
+  /* Ensure logo text sits nicely and does not wrap */
+  .logo-text {
+    font-size: 1.25rem !important;
+  }
+}
+
+

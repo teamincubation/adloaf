@@ -48,34 +48,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (empty($data['service_type']) || empty($data['deadline']) || empty($data['project_description'])) {
         $error = "Please fill in all required fields.";
     } else {
-        // Get service pricing
-        $svc = $pdo->prepare("SELECT price_from_inr, market_price_inr FROM services WHERE title LIKE ? LIMIT 1");
-        $svc->execute(['%' . $data['service_type'] . '%']);
-        $svcData = $svc->fetch();
+        // Process uploaded files
+        $uploadedFiles = [];
+        if (!empty($_FILES['project_files']['name'][0])) {
+            $files = $_FILES['project_files'];
+            $totalSize = 0;
+            $fileCount = count($files['name']);
+            if ($fileCount > 5) {
+                $error = "You can upload a maximum of 5 files.";
+            } else {
+                $blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
+                for ($i = 0; $i < $fileCount; $i++) {
+                    $totalSize += $files['size'][$i];
+                    $ext = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));
+                    if (in_array($ext, $blacklist)) {
+                        $error = "Dangerous file extension (." . htmlspecialchars($ext) . ") is not allowed.";
+                        break;
+                    }
+                }
+                if (empty($error) && $totalSize > 10 * 1024 * 1024) {
+                    $error = "Total size of all files must not exceed 10MB.";
+                }
+                if (empty($error)) {
+                    // Create folder if not exists
+                    $ingFolder = __DIR__ . '/assets/uploads/ingredients/';
+                    if (!is_dir($ingFolder)) {
+                        mkdir($ingFolder, 0755, true);
+                    }
+                    for ($i = 0; $i < $fileCount; $i++) {
+                        if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                            $originalName = basename($files['name'][$i]);
+                            // Sanitize name
+                            $sanitizedName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+                            $uniqueName = time() . '_' . uniqid() . '_' . $sanitizedName;
+                            $destPath = $ingFolder . $uniqueName;
+                            if (move_uploaded_file($files['tmp_name'][$i], $destPath)) {
+                                $uploadedFiles[] = [
+                                    'name' => $originalName,
+                                    'path' => 'assets/uploads/ingredients/' . $uniqueName
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-        $stmt = $pdo->prepare("INSERT INTO bake_requests 
-            (user_id, service_type, content_language, deadline, project_description, ai_generated_desc, estimated_price_inr, market_price_inr)
-            VALUES (?,?,?,?,?,?,?,?)");
-        $stmt->execute([
-            $_SESSION['user_id'],
-            $data['service_type'],
-            $data['content_language'],
-            $data['deadline'],
-            $data['project_description'],
-            $_POST['ai_description'] ?? null,
-            $svcData['price_from_inr'] ?? 0,
-            $svcData['market_price_inr'] ?? 0,
-        ]);
+        if (empty($error)) {
+            $uploadedJson = empty($uploadedFiles) ? null : json_encode($uploadedFiles);
 
-        // Send confirmation email
-        try {
-            $mailer = new Mailer();
-            $mailer->sendBakeConfirmation($user['email'], $user['full_name'], $data['service_type'], $data['deadline']);
-        } catch(Exception $e) {}
+            // Get service pricing
+            $svc = $pdo->prepare("SELECT price_from_inr, market_price_inr FROM services WHERE title LIKE ? LIMIT 1");
+            $svc->execute(['%' . $data['service_type'] . '%']);
+            $svcData = $svc->fetch();
 
-        // Clear draft
-        unset($_SESSION['bake_draft']);
-        $submitted = true;
+            $stmt = $pdo->prepare("INSERT INTO bake_requests 
+                (user_id, service_type, content_language, deadline, project_description, ai_generated_desc, estimated_price_inr, market_price_inr, uploaded_files)
+                VALUES (?,?,?,?,?,?,?,?,?)");
+            $stmt->execute([
+                $_SESSION['user_id'],
+                $data['service_type'],
+                $data['content_language'],
+                $data['deadline'],
+                $data['project_description'],
+                $_POST['ai_description'] ?? null,
+                $svcData['price_from_inr'] ?? 0,
+                $svcData['market_price_inr'] ?? 0,
+                $uploadedJson
+            ]);
+
+            // Send confirmation email
+            try {
+                $mailer = new Mailer();
+                $mailer->sendBakeConfirmation($user['email'], $user['full_name'], $data['service_type'], $data['deadline']);
+            } catch(Exception $e) {}
+
+            // Clear draft
+            unset($_SESSION['bake_draft']);
+            $submitted = true;
+        }
     }
 }
 
@@ -85,6 +136,7 @@ $minDate    = date('Y-m-d', strtotime('+4 days'));
 
 // Restore draft values
 $draft = $_SESSION['bake_draft'] ?? [];
+$selectedService = $_GET['service'] ?? ($draft['service_type'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -133,7 +185,7 @@ $draft = $_SESSION['bake_draft'] ?? [];
 <!-- Standardized Navigation -->
 <header class="header scrolled" id="header">
   <div class="container nav-container">
-    <a href="index.php" class="logo" aria-label="Adloaf Home">
+    <a href="index.php" class="logo" aria-label="adloaf Home">
       <div class="logo-icon-wrap">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
@@ -141,7 +193,7 @@ $draft = $_SESSION['bake_draft'] ?? [];
           <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
         </svg>
       </div>
-      <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+      <span class="logo-text">adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
     </a>
 
     <nav aria-label="Main Navigation">
@@ -227,7 +279,7 @@ $draft = $_SESSION['bake_draft'] ?? [];
 
     <div class="form-error" id="js-error-card" style="display:none; background:rgba(239,68,68,0.1); color:#ef4444; padding:.75rem 1rem; border-radius:8px; margin-bottom:1.5rem; font-weight: 600; text-align: center; border: 1px solid rgba(239,68,68,0.2);"></div>
 
-    <form method="POST" action="bake.php" id="bake-form">
+    <form method="POST" action="bake.php" id="bake-form" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
       <input type="hidden" name="action" value="submit_bake">
       <input type="hidden" name="ai_description" id="ai-description-hidden">
@@ -246,12 +298,12 @@ $draft = $_SESSION['bake_draft'] ?? [];
           <div class="form-group">
             <label class="form-label">Select Service</label>
             <select name="service_type" id="service-select" class="form-input" style="height:53px;" required onchange="updateStepProgress()">
-              <option value="" disabled <?php echo empty($draft['service_type']) ? 'selected' : ''; ?>>Choose a recipe...</option>
+              <option value="" disabled <?php echo empty($selectedService) ? 'selected' : ''; ?>>Choose a recipe...</option>
               <?php foreach ($services as $svc): ?>
                 <option value="<?php echo htmlspecialchars($svc['title']); ?>"
                   data-price="<?php echo $svc['price_from_inr'] ?? 0; ?>"
                   data-market="<?php echo $svc['market_price_inr'] ?? 0; ?>"
-                  <?php echo ($draft['service_type'] ?? '') == $svc['title'] ? 'selected' : ''; ?>>
+                  <?php echo $selectedService == $svc['title'] ? 'selected' : ''; ?>>
                   <?php echo htmlspecialchars($svc['title']); ?>
                 </option>
               <?php endforeach; ?>
@@ -273,7 +325,7 @@ $draft = $_SESSION['bake_draft'] ?? [];
           <input type="date" name="deadline" class="form-input" id="deadline-input" required min="<?php echo $minDate; ?>" value="<?php echo htmlspecialchars($draft['deadline'] ?? ''); ?>" style="height:53px;" onchange="updateStepProgress()">
         </div>
 
-        <!-- SECTION 3: Project Description -->
+        <!-- SECTION 3: Project Ingredients -->
         <div class="bake-section-title" style="margin-top:2.5rem;"><span class="num">3</span> Project Ingredients</div>
         <div class="form-group">
           <div class="textarea-header">
@@ -289,6 +341,12 @@ $draft = $_SESSION['bake_draft'] ?? [];
           </div>
           <textarea name="project_description" id="description-textarea" class="form-textarea" rows="5" placeholder="Tell us about your project, target audience, goals, style preferences..." required style="margin-top:0.75rem;" oninput="updateStepProgress()"><?php echo htmlspecialchars($draft['project_description'] ?? ''); ?></textarea>
           <div id="ai-loading" style="display:none; color:var(--accent-orange); font-size:0.88rem; font-weight:700; margin-top:0.5rem; animation: pulse-glow 1.5s infinite;">🤖 AI is kneading your project description...</div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.5rem;">
+          <label class="form-label">Project Assets & Reference Files <small style="color:var(--text-secondary); font-weight:400;">(Max 5 files, total up to 10MB. Include logos, documents, or reference files)</small></label>
+          <input type="file" name="project_files[]" id="project-files" class="form-input" multiple style="padding: 0.6rem 0.75rem; height: auto;" onchange="validateFiles(event)">
+          <div id="file-list-preview" style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;"></div>
         </div>
 
         <!-- SECTION 4: Pricing -->
@@ -342,10 +400,10 @@ $draft = $_SESSION['bake_draft'] ?? [];
         <a href="index.php" class="logo footer-logo">
           <div class="logo-icon-wrap">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
+               <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
             </svg>
           </div>
-          <span class="logo-text">Adloaf<span class="logo-dot">.</span></span>
+          <span class="logo-text">adloaf<span class="logo-dot">.</span></span>
         </a>
         <p class="footer-desc">Freshly baked marketing strategies, brand visual concepts, graphic assets, and dynamic web interfaces designed to help brands grow.</p>
       </div>
@@ -371,7 +429,7 @@ $draft = $_SESSION['bake_draft'] ?? [];
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 Adloaf Creative Agency. All rights reserved.</p>
+      <p>&copy; 2026 adloaf Creative Agency. All rights reserved.</p>
     </div>
   </div>
 </footer>
@@ -516,6 +574,46 @@ async function generateAI() {
   }
   document.getElementById('ai-loading').style.display = 'none';
   if (aiBtn) aiBtn.disabled = false;
+}
+
+function validateFiles(event) {
+  const input = event.target;
+  const preview = document.getElementById('file-list-preview');
+  preview.innerHTML = '';
+  
+  if (!input.files || input.files.length === 0) return;
+  
+  const files = Array.from(input.files);
+  if (files.length > 5) {
+    displayError('You can upload a maximum of 5 files.');
+    input.value = '';
+    return;
+  }
+  
+  let totalSize = 0;
+  const blacklist = ['php', 'phtml', 'php5', 'php7', 'phps', 'htaccess', 'exe', 'js', 'bat', 'cmd', 'sh', 'com', 'scr', 'msi', 'vbs'];
+  
+  for (let file of files) {
+    totalSize += file.size;
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (blacklist.includes(ext)) {
+      displayError('Dangerous file extension (.' + ext + ') is not allowed.');
+      input.value = '';
+      return;
+    }
+  }
+  
+  if (totalSize > 10 * 1024 * 1024) {
+    displayError('Total size of all files must not exceed 10MB.');
+    input.value = '';
+    return;
+  }
+  
+  // Display selected files
+  preview.innerHTML = '📁 Files selected: ' + files.map(f => `${f.name} (${Math.round(f.size/1024)} KB)`).join(', ');
+  
+  const errCard = document.getElementById('js-error-card');
+  if (errCard) errCard.style.display = 'none';
 }
 
 function showOven(e) {

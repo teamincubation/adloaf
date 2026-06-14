@@ -202,11 +202,11 @@ try {
 
                 <div class="form-row-2">
                     <div class="form-group">
-                        <label class="form-label">Total Quotation ($)</label>
+                        <label class="form-label">Total Quotation (<?php echo site_setting('base_currency_symbol', '₹'); ?>)</label>
                         <input type="number" step="0.01" name="price" class="form-input" required value="<?php echo $editProject ? $editProject['price'] : '0.00'; ?>">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Paid Amount ($)</label>
+                        <label class="form-label">Paid Amount (<?php echo site_setting('base_currency_symbol', '₹'); ?>)</label>
                         <input type="number" step="0.01" name="paid_amount" class="form-input" required value="<?php echo $editProject ? $editProject['paid_amount'] : '0.00'; ?>">
                     </div>
                 </div>
@@ -245,9 +245,9 @@ try {
                         <td><span class="status-badge status-<?php echo $project['status']; ?>"><?php echo $project['status']; ?></span></td>
                         <td>
                             <small>
-                                Total: $<?php echo number_format($project['price'], 2); ?><br>
+                                Total: <?php echo site_setting('base_currency_symbol', '₹') . number_format($project['price'], 2); ?><br>
                                 <span style="color: <?php echo $project['paid_amount'] < $project['price'] ? '#ef4444' : '#10b981'; ?>">
-                                    Paid: $<?php echo number_format($project['paid_amount'], 2); ?>
+                                    Paid: <?php echo site_setting('base_currency_symbol', '₹') . number_format($project['paid_amount'], 2); ?>
                                 </span>
                             </small>
                         </td>

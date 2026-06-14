@@ -5,6 +5,7 @@ require_once __DIR__ . '/lib/helpers.php';
 require_login('profile.php');
 
 $user = current_user();
+$currencySymbol = site_setting('base_currency_symbol', '₹');
 $error = '';
 $success = '';
 
@@ -83,7 +84,7 @@ $bakeRequests = $reqStmt->fetchAll();
 <!-- Standardized Navigation -->
 <header class="header scrolled" id="header">
   <div class="container nav-container">
-    <a href="index.php" class="logo" aria-label="Adloaf Home">
+    <a href="index.php" class="logo" aria-label="adloaf Home">
       <div class="logo-icon-wrap">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
@@ -91,7 +92,7 @@ $bakeRequests = $reqStmt->fetchAll();
           <path d="M12 2V4M8 3.5l1.5 1.5M16 3.5L14.5 5" stroke="currentColor" stroke-width="2"/>
         </svg>
       </div>
-      <span class="logo-text">Adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
+      <span class="logo-text">adloaf<span class="logo-dot" style="color:var(--accent-orange);">.</span></span>
     </a>
 
     <nav aria-label="Main Navigation">
@@ -152,12 +153,11 @@ $bakeRequests = $reqStmt->fetchAll();
         </form>
         
         <h2 class="auth-title" style="font-size: 1.4rem; margin-bottom: 0.25rem;"><?php echo htmlspecialchars($user['full_name']); ?></h2>
-        <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom: 1.5rem;"><?php echo htmlspecialchars($user['email']); ?></p>
+        <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom: 1rem;"><?php echo htmlspecialchars($user['email']); ?></p>
         
-        <div style="text-align: left; background: var(--bg-primary); border-radius: var(--radius-sm); padding: 1rem; border: 1px solid var(--border-medium); font-size: 0.88rem; color: var(--text-secondary);">
-          <div style="margin-bottom: 0.5rem;">📱 <strong>WhatsApp:</strong> <?php echo htmlspecialchars($user['whatsapp']); ?></div>
-          <div>📍 <strong>Location:</strong> <?php echo htmlspecialchars(implode(', ', array_filter([$user['city'], $user['state'], $user['country']])) ?: 'Not provided'); ?></div>
-        </div>
+        <a href="tel:<?php echo htmlspecialchars(site_setting('whatsapp_admin', '916282563209')); ?>" class="btn btn-primary" style="display: block; width: 100%; text-decoration: none; font-weight: 700; padding: 0.8rem 1rem; border-radius: var(--radius-sm); text-align: center; margin-top: 1.5rem;">
+          📞 Call Admin Directly
+        </a>
       </div>
 
       <!-- MAIN CONTENT: Edit Details & History -->
@@ -268,11 +268,27 @@ $bakeRequests = $reqStmt->fetchAll();
                   </div>
                 </div>
                 
-                <div style="display: flex; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); border-top: 1px dashed var(--border-medium); padding-top: 0.75rem;">
+                <div style="display: flex; gap: 2rem; margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); border-top: 1px dashed var(--border-medium); padding-top: 0.75rem; flex-wrap: wrap;">
                   <div>📅 <strong>Deadline:</strong> <?php echo date('M d, Y', strtotime($req['deadline'])); ?></div>
-                  <div>💰 <strong>Est. Price:</strong> ₹<?php echo number_format($req['estimated_price_inr']); ?></div>
+                  <div>💰 <strong>Est. Price:</strong> <?php echo $currencySymbol; ?><?php echo number_format($req['estimated_price_inr'], 2); ?></div>
+                  <?php if ($req['total_cost'] > 0): ?>
+                    <div>💵 <strong>Final Cost:</strong> <span style="color:var(--accent-orange); font-weight:700;"><?php echo $currencySymbol; ?><?php echo number_format($req['total_cost'], 2); ?></span></div>
+                  <?php endif; ?>
                   <div>🌎 <strong>Lang:</strong> <?php echo htmlspecialchars(ucfirst($req['content_language'] ?? 'English')); ?></div>
                 </div>
+
+                <?php if (!empty($req['uploaded_files'])): ?>
+                  <div style="margin-top: 1rem; border-top: 1px dashed var(--border-medium); padding-top: 0.75rem;">
+                    <strong style="color:var(--text-primary); font-size:0.85rem; display: block; margin-bottom: 0.4rem;">📁 Uploaded Reference Ingredients:</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                      <?php foreach (json_decode($req['uploaded_files'], true) ?: [] as $f): ?>
+                        <a href="download.php?request_id=<?php echo $req['id']; ?>&file=<?php echo urlencode(basename($f['path'])); ?>" style="background: var(--bg-secondary); border: 1px solid var(--border-medium); padding: 5px 10px; border-radius: 6px; font-size: 0.8rem; color: var(--accent-orange); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                          📥 <?php echo htmlspecialchars($f['name']); ?>
+                        </a>
+                      <?php endforeach; ?>
+                    </div>
+                  </div>
+                <?php endif; ?>
 
                 <div style="margin-top: 1rem; text-align: right;">
                   <button type="button" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem; border-radius: 6px;" onclick="toggleBrief(<?php echo $req['id']; ?>)">View Project Description ▾</button>
@@ -309,7 +325,7 @@ $bakeRequests = $reqStmt->fetchAll();
               <path d="M3 15C3 13 4.5 10.5 7 10.5C9.5 10.5 10 12 12 12C14 12 14.5 10.5 17 10.5C19.5 10.5 21 13 21 15C21 18.5 18.5 20 12 20C5.5 20 3 18.5 3 15Z"/>
             </svg>
           </div>
-          <span class="logo-text">Adloaf<span class="logo-dot">.</span></span>
+          <span class="logo-text">adloaf<span class="logo-dot">.</span></span>
         </a>
         <p class="footer-desc">Freshly baked marketing strategies, brand visual concepts, graphic assets, and dynamic web interfaces designed to help brands grow.</p>
       </div>
@@ -335,7 +351,7 @@ $bakeRequests = $reqStmt->fetchAll();
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 Adloaf Creative Agency. All rights reserved.</p>
+      <p>&copy; 2026 adloaf Creative Agency. All rights reserved.</p>
     </div>
   </div>
 </footer>

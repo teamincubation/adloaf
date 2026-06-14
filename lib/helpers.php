@@ -159,7 +159,7 @@ Write in first person as the client. Be specific and professional.";
 
     try {
         $apiKey = GEMINI_API_KEY;
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
         $payload = json_encode([
             'contents' => [['parts' => [['text' => $prompt]]]],
             'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 400]
