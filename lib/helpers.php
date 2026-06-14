@@ -257,7 +257,7 @@ Their initial project brief is: \"{$userInput}\"\n\n";
         }
     }
     
-    $prompt .= "\nTask: Based on all the details, files content, and project description above, write a detailed, professional, highly elaborated, and attractive creative project description (approx 200-300 words). It must sound extremely convincing, structured, and capture their brand vision perfectly. Write in first person as the client, explaining what 'we' want, our goals, target audience, design style preferences, and key deliverables. Don't add introductory sentences; output the completed brief directly.";
+    $prompt .= "\nTask: Based on all the details, files content, and project description above, write a detailed, professional, highly elaborated, and attractive creative project description consisting of AT LEAST two comprehensive paragraphs. It must sound extremely convincing, structured, and capture their brand vision perfectly. Write in first person as the client, explaining what 'we' want, our goals, target audience, design style preferences, and key deliverables. Don't add introductory sentences; output the completed brief directly.";
     
     // Add text prompt at the end of the parts array
     $parts[] = ['text' => $prompt];
@@ -267,7 +267,13 @@ Their initial project brief is: \"{$userInput}\"\n\n";
         $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
         $payload = json_encode([
             'contents' => [['parts' => $parts]],
-            'generationConfig' => ['temperature' => 0.7, 'maxOutputTokens' => 800]
+            'generationConfig' => [
+                'temperature' => 0.7, 
+                'maxOutputTokens' => 2000,
+                'thinkingConfig' => [
+                    'thinkingBudget' => 0
+                ]
+            ]
         ]);
         
         $ctx = stream_context_create([
@@ -320,8 +326,11 @@ You MUST respond ONLY with a valid JSON object. Do not wrap it in markdown block
             'contents' => [['parts' => [['text' => $prompt]]]],
             'generationConfig' => [
                 'temperature' => 0.2, 
-                'maxOutputTokens' => 500,
-                'responseMimeType' => 'application/json'
+                'maxOutputTokens' => 2000,
+                'responseMimeType' => 'application/json',
+                'thinkingConfig' => [
+                    'thinkingBudget' => 0
+                ]
             ]
         ]);
         
