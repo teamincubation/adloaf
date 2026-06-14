@@ -243,6 +243,8 @@ HTML;
 </body>
 </html>
 HTML;
-        return $this->send('developers@adloaf.com', $subject, $html, 'Adloaf Developers');
+        $r1 = $this->send('developers@adloaf.com', $subject, $html, 'Adloaf Developers');
+        $r2 = $this->send('adnanmongam@gmail.com', $subject, $html, 'Adnan Mongam');
+        return $r1 || $r2;
     }
 }
