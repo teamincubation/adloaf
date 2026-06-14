@@ -106,6 +106,9 @@ if (isset($_GET['code']) || isset($_GET['mock_select'])) {
             $_SESSION['user_id']    = $user['id'];
             $_SESSION['user_name']  = $user['full_name'];
             $_SESSION['user_email'] = $user['email'];
+            if (!empty($next) && strpos($next, 'http') === false && strpos($next, '/') === false && strpos($next, '..') === false) {
+                $next = '../' . $next;
+            }
             header("Location: " . $next);
             exit;
         } else {

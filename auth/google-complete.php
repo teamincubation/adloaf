@@ -41,6 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Clear session registration draft data
         unset($_SESSION['google_reg']);
         
+        if (!empty($next) && strpos($next, 'http') === false && strpos($next, '/') === false && strpos($next, '..') === false) {
+            $next = '../' . $next;
+        }
         header("Location: " . $next);
         exit;
     }

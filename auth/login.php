@@ -25,6 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $next = $_POST['next'] ?? $_SESSION['redirect_after_login'] ?? '../bake.php';
             unset($_SESSION['redirect_after_login']);
+            if (!empty($next) && strpos($next, 'http') === false && strpos($next, '/') === false && strpos($next, '..') === false) {
+                $next = '../' . $next;
+            }
             header("Location: $next");
             exit;
         } else {
