@@ -82,6 +82,17 @@ try {
             
             $payLink = SITE_URL . "/pay.php?inv=" . urlencode($invoiceData['invoice_number']) . "&am=" . $amountRequested . "&tn=" . urlencode($remarks);
             
+            $isAdvance = false;
+            if (!empty($customRemarks)) {
+                if (stripos($customRemarks, 'advance') !== false) {
+                    $isAdvance = true;
+                }
+            } else {
+                if ($status === 'Accepted') {
+                    $isAdvance = true;
+                }
+            }
+            
             $mailer = new Mailer();
             $mailSent = $mailer->sendInvoice(
                 $invoiceData['client_email'],
@@ -91,7 +102,8 @@ try {
                 number_format($totalPrice, 2),
                 number_format($amountRequested, 2),
                 number_format($balanceDue, 2),
-                $payLink
+                $payLink,
+                $isAdvance
             );
             
             if ($mailSent) {
@@ -504,7 +516,11 @@ if ($payInvoice):
     $generatedLink = SITE_URL . "/pay.php?inv=" . urlencode($invNum) . "&am=" . $customAmount . "&tn=" . urlencode($customRemarks);
     
     // Whatsapp text
-    $whatsappText = "Hi " . htmlspecialchars($payInvoice['client_name']) . ", here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". Total requested amount is " . $currencySym . number_format($customAmount, 2) . " (" . ucfirst($payType) . "). Kindly complete the payment using this link: " . $generatedLink . " - Thank you! adloaf.";
+    if ($payType === 'advance') {
+        $whatsappText = "Hi " . htmlspecialchars($payInvoice['client_name']) . ", here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". The total project cost is " . $currencySym . number_format($total, 2) . " and the advance payment amount is " . $currencySym . number_format($customAmount, 2) . " (Advance). Note: The balance payment should be paid after completed the work. Kindly complete the payment using this link: " . $generatedLink . " - Thank you! adloaf.com";
+    } else {
+        $whatsappText = "Hi " . htmlspecialchars($payInvoice['client_name']) . ", here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". Total requested amount is " . $currencySym . number_format($customAmount, 2) . " (" . ucfirst($payType) . "). Kindly complete the payment using this link: " . $generatedLink . " - Thank you! adloaf.com";
+    }
     $whatsappUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $payInvoice['client_phone']) . "?text=" . urlencode($whatsappText);
     
     // Direct Email trigger url

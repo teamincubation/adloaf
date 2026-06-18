@@ -62,7 +62,7 @@ class Mailer {
       </div>
       <p style="color:#8B7355; font-size:13px;">If you didn't request this, you can safely ignore this email. Your password will remain unchanged.</p>
       <hr style="border:1px solid #3D2E1E; margin: 24px 0;">
-      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2025 Adloaf. Freshly Baked Creative Ideas.</p>
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2025 <a href="https://adloaf.com" style="color:#EA580C; text-decoration:none; font-weight:600;">adloaf.com</a>. Freshly Baked Creative Ideas.</p>
     </div>
   </div>
 </body>
@@ -92,7 +92,7 @@ HTML;
       <p style="color:#C4A882;">We've received your <strong style="color:#EA580C;">{$service}</strong> request with a deadline of <strong style="color:#EA580C;">{$deadline}</strong>. Our team will review it shortly and get back to you on WhatsApp!</p>
       <p style="color:#8B7355; font-size:13px; margin-top:24px;">Stay tuned — fresh ideas take just the right amount of time to bake. 🍞</p>
       <hr style="border:1px solid #3D2E1E; margin:24px 0;">
-      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2025 Adloaf. Freshly Baked Creative Ideas.</p>
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2025 <a href="https://adloaf.com" style="color:#EA580C; text-decoration:none; font-weight:600;">adloaf.com</a>. Freshly Baked Creative Ideas.</p>
     </div>
   </div>
 </body>
@@ -179,7 +179,7 @@ HTML;
       
       <p style="color:#8B7355; font-size:13px; margin-top:24px;">If you have any questions, feel free to reply directly to this email or chat with us on WhatsApp.</p>
       <hr style="border:1px solid #3D2E1E; margin:24px 0;">
-      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. Freshly Baked Design Ideas.</p>
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 <a href="https://adloaf.com" style="color:#EA580C; text-decoration:none; font-weight:600;">adloaf.com</a>. Freshly Baked Design Ideas.</p>
     </div>
   </div>
 </body>
@@ -237,7 +237,7 @@ HTML;
       </div>
       
       <hr style="border:1px solid #3D2E1E; margin:24px 0;">
-      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. Admin Notifications.</p>
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 <a href="https://adloaf.com" style="color:#EA580C; text-decoration:none; font-weight:600;">adloaf.com</a>. Admin Notifications.</p>
     </div>
   </div>
 </body>
@@ -251,9 +251,18 @@ HTML;
     /**
      * Send formatted invoice to client with Pay Now link
      */
-    public function sendInvoice($to, $toName, $invoiceNumber, $service, $total, $requested, $balance, $payLink) {
+    public function sendInvoice($to, $toName, $invoiceNumber, $service, $total, $requested, $balance, $payLink, $isAdvance = false) {
         $subject = "Invoice from Adloaf: {$invoiceNumber} [{$service}]";
         $currencySym = site_setting('base_currency_symbol', '₹');
+        
+        $noteHtml = '';
+        if ($isAdvance) {
+            $noteHtml = <<<HTML
+            <div style="margin-top: 20px; padding: 15px; background: #1C150E; border-left: 4px solid #EA580C; border-radius: 4px; color: #FAF7F2;">
+                <span style="color:#C4A882; font-size:14px;"><strong>Note:</strong> The balance payment should be paid after completed the work.</span>
+            </div>
+HTML;
+        }
         
         $html = <<<HTML
 <!DOCTYPE html>
@@ -285,13 +294,15 @@ HTML;
         </tr>
       </table>
       
+      {$noteHtml}
+      
       <div style="text-align:center; margin:32px 0;">
         <a href="{$payLink}" style="background: linear-gradient(135deg, #EA580C, #D97706); color:#fff; padding:14px 32px; border-radius:8px; text-decoration:none; font-weight:700; font-size:16px; display:inline-block;">Pay Now via UPI</a>
       </div>
       
       <p style="color:#8B7355; font-size:13px; margin-top:24px;">Click the button above to view your printable invoice and complete your payment via UPI immediately.</p>
       <hr style="border:1px solid #3D2E1E; margin:24px 0;">
-      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 adloaf Creative. All rights reserved.</p>
+      <p style="color:#8B7355; font-size:12px; text-align:center;">© 2026 <a href="https://adloaf.com" style="color:#EA580C; text-decoration:none; font-weight:600;">adloaf.com</a>. All rights reserved.</p>
     </div>
   </div>
 </body>

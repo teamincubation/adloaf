@@ -263,7 +263,7 @@ $adminWA = ADMIN_WA;
                         <a href="tel:<?php echo htmlspecialchars($req['whatsapp']); ?>" class="call-btn">
                             📞 Call Client
                         </a>
-                        <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $req['whatsapp']); ?>?text=<?php echo urlencode("Hi " . $req['full_name'] . "! Your adloaf project request has been received. Let's discuss details!"); ?>" target="_blank" class="wa-btn">
+                        <a href="https://wa.me/<?php echo preg_replace('/[^0-9]/', '', $req['whatsapp']); ?>?text=<?php echo urlencode("Hi " . $req['full_name'] . "! Your adloaf project request has been received. Let's discuss details! - adloaf.com"); ?>" target="_blank" class="wa-btn">
                             💬 Chat on WA
                         </a>
                         <?php endif; ?>
@@ -353,7 +353,8 @@ $adminWA = ADMIN_WA;
                                              "💳 Payment Details:\n" .
                                              ($upiId ? "UPI ID: " . $upiId . "\n" : "") .
                                              ($upiNum ? "UPI Number: " . $upiNum . "\n" : "") .
-                                             ($bankDetails ? "Bank: " . str_replace("\r\n", " ", $bankDetails) . "\n" : "");
+                                             ($bankDetails ? "Bank: " . str_replace("\r\n", " ", $bankDetails) . "\n" : "") . "\n" .
+                                             "adloaf.com";
                                              
                                     $waShareUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $req['whatsapp']) . "?text=" . urlencode($waMsg);
                                     ?>
