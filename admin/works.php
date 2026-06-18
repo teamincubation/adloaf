@@ -517,9 +517,18 @@ if ($payInvoice):
     
     // Whatsapp text
     if ($payType === 'advance') {
-        $whatsappText = "Hi " . htmlspecialchars($payInvoice['client_name']) . ", here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". The total project cost is " . $currencySym . number_format($total, 2) . " and the advance payment amount is " . $currencySym . number_format($customAmount, 2) . " (Advance). Note: The balance payment should be paid after completed the work. Kindly complete the payment using this link: " . $generatedLink . " - Thank you! adloaf.com";
+        $whatsappText = "Hi *" . htmlspecialchars($payInvoice['client_name']) . "* , here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". The `total project cost is " . $currencySym . number_format($total, 2) . "` and the advance payment amount is *" . $currencySym . number_format($customAmount, 2) . " (Advance)* .\n\n" .
+                        "> Note: The balance payment should be paid after completed the work.\n\n" .
+                        "Kindly complete the payment using this link: \n" .
+                        $generatedLink . "\n\n" .
+                        "-Thank you! \n" .
+                        "adloaf.com";
     } else {
-        $whatsappText = "Hi " . htmlspecialchars($payInvoice['client_name']) . ", here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". Total requested amount is " . $currencySym . number_format($customAmount, 2) . " (" . ucfirst($payType) . "). Kindly complete the payment using this link: " . $generatedLink . " - Thank you! adloaf.com";
+        $whatsappText = "Hi *" . htmlspecialchars($payInvoice['client_name']) . "* , here is the invoice " . htmlspecialchars($invNum) . " for your project \"" . htmlspecialchars($payInvoice['project_title']) . "\". The total requested amount is *" . $currencySym . number_format($customAmount, 2) . " (" . ucfirst($payType) . ")* .\n\n" .
+                        "Kindly complete the payment using this link: \n" .
+                        $generatedLink . "\n\n" .
+                        "-Thank you! \n" .
+                        "adloaf.com";
     }
     $whatsappUrl = "https://wa.me/" . preg_replace('/[^0-9]/', '', $payInvoice['client_phone']) . "?text=" . urlencode($whatsappText);
     
